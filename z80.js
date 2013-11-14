@@ -77,6 +77,104 @@ window.openti.z80 = function() {
             return self.af & 0x00FF;
         };
 
+        self.B = function(value) {
+            if (typeof value !== 'undefined') {
+                self.bc &= 0x00FF;
+                self.bc |= (value & 0xFF) << 8;
+            }
+            return (self.bc & 0xFF00) >> 8;
+        };
+
+        self.C = function(value) {
+            if (typeof value !== 'undefined') {
+                self.bc &= 0xFF00;
+                self.bc |= value & 0xFF;
+            }
+            return self.bc & 0x00FF;
+        };
+
+        self.D = function(value) {
+            if (typeof value !== 'undefined') {
+                self.de &= 0x00FF;
+                self.de |= (value & 0xFF) << 8;
+            }
+            return (self.de & 0xFF00) >> 8;
+        };
+
+        self.E = function(value) {
+            if (typeof value !== 'undefined') {
+                self.de &= 0xFF00;
+                self.de |= value & 0xFF;
+            }
+            return self.af & 0x00FF;
+        };
+
+        self.H = function(value) {
+            if (typeof value !== 'undefined') {
+                self.hl &= 0x00FF;
+                self.hl |= (value & 0xFF) << 8;
+            }
+            return (self.hl & 0xFF00) >> 8;
+        };
+
+        self.L = function(value) {
+            if (typeof value !== 'undefined') {
+                self.hl &= 0xFF00;
+                self.hl |= value & 0xFF;
+            }
+            return self.hl & 0x00FF;
+        };
+        
+        // TODO: IXH/IXL/IYH/IYL
+        
+        self.flags = {
+            S: function(value) {
+                if (typeof value !== 'undefined') {
+                    if (value) self.af |=  (1 << 7);
+                    else       self.af &= ~(1 << 7);
+                }
+                return (self.af & (1 << 7)) > 0;
+            },
+            Z: function(value) {
+                if (typeof value !== 'undefined') {
+                    if (value) self.af |=  (1 << 6);
+                    else       self.af &= ~(1 << 6);
+                }
+                return (self.af & (1 << 6)) > 0;
+            },
+            H: function(value) {
+                if (typeof value !== 'undefined') {
+                    if (value) self.af |=  (1 << 4);
+                    else       self.af &= ~(1 << 4);
+                }
+                return (self.af & (1 << 4)) > 0;
+            },
+            PV: function(value) {
+                if (typeof value !== 'undefined') {
+                    if (value) self.af |=  (1 << 2);
+                    else       self.af &= ~(1 << 2);
+                }
+                return (self.af & (1 << 2)) > 0;
+            },
+            N: function(value) {
+                if (typeof value !== 'undefined') {
+                    if (value) self.af |=  (1 << 1);
+                    else       self.af &= ~(1 << 1);
+                }
+                return (self.af & (1 << 1)) > 0;
+            },
+            C: function(value) {
+                if (typeof value !== 'undefined') {
+                    if (value) self.af |=  (1 << 0);
+                    else       self.af &= ~(1 << 0);
+                }
+                return (self.af & (1 << 0)) > 0;
+            },
+            update: function() {
+                // TODO: Some function to update flags based on the result of an operation
+            }
+        };
+
         self.swap = function() {
             var temp;
             temp = self.af; self.af = self.af_; self.af_ = temp;
