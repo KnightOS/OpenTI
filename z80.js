@@ -184,19 +184,26 @@ window.openti.z80 = function() {
                 return (af & (1 << 0)) > 0;
             },
             update: function(oldValue, newValue, subtraction, parity, unaffected) {
-                self.flags.S((self.A() & 0x80) == 0x80);
-                self.flags.Z(newValue == 0);
+                if (unaffected.indexOf('S') == -1)
+                    self.flags.S((self.A() & 0x80) == 0x80);
+                if (unaffected.indexOf('Z') == -1)
+                    self.flags.Z(newValue == 0);
                 // TODO: Half carry
-                if (parity) {
-                    self.flags.PV(countSetBits(self.A()) % 2 == 0);
-                } else {
-                    self.flags.PV((oldValue & 0x80) == (newValue & 0x80));
+                if (unaffected.indexOf('P') == -1) {
+                    if (parity) {
+                        self.flags.PV(countSetBits(self.A()) % 2 == 0);
+                    } else {
+                        self.flags.PV((oldValue & 0x80) == (newValue & 0x80));
+                    }
                 }
-                self.flags.N(subtraction);
-                if (subtraction) {
-                    self.flags.C(newValue > oldValue);
-                } else {
-                    self.flags.C(newValue < oldValue);
+                if (unaffected.indexOf('N') == -1)
+                    self.flags.N(subtraction);
+                if (unaffected.indexOf('C') == -1) {
+                    if (subtraction) {
+                        self.flags.C(newValue > oldValue);
+                    } else {
+                        self.flags.C(newValue < oldValue);
+                    }
                 }
             }
         };
@@ -245,13 +252,13 @@ window.openti.z80 = function() {
                     break;
                 case 0x04: // inc b
                     newValue = (self.registers.B() + 1) & 0xFF;
-                    self.registers.flags.update(self.registers.B(), newValue, false, false, [ 'c' ]);
+                    self.registers.flags.update(self.registers.B(), newValue, false, false, 'C');
                     self.registers.B(newValue);
                     cycles -= 4;
                     break;
                 case 0x05: // dec b
                     newValue = (self.registers.B() - 1) & 0xFF;
-                    self.registers.flags.update(self.registers.B(), newValue, true, false, [ 'c' ]);
+                    self.registers.flags.update(self.registers.B(), newValue, true, false, 'C');
                     self.registers.B(newValue);
                     cycles -= 4;
                     break;
