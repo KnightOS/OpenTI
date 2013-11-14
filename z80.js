@@ -4,8 +4,8 @@ window.openti.z80 = function() {
     self.writeMemory = null;
     self.readPort = null;
     self.writePort = null;
-    af = bc = de = hl = ix = iy = 0;
-    pc = 0; sp = 0;
+    var af = bc = de = hl = ix = iy = 0;
+    var pc = 0; sp = 0;
     function countSetBits(value) {
         // Used to set the P/V flag under some conditions
         // There are some algorithms that do this faster, but we're already using JavaScript
@@ -21,8 +21,8 @@ window.openti.z80 = function() {
     }
     self.registers = (function() {
         var self = this;
-        af_ = bc_ = de_ = hl_ = ix_ = iy_ = 0;
-        i = 0; r = 0;
+        var af_ = bc_ = de_ = hl_ = ix_ = iy_ = 0;
+        var i = r = 0;
 
         self.AF = function(value) {
             if (typeof value !== 'undefined') af = value & 0xFFFF;
