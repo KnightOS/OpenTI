@@ -39,4 +39,18 @@ window.openti.mmu = function(flashPages, ramPages) {
             self.ram[mappedAddress] = value;
         }
     };
+
+    self.forceWrite = function(address, value) {
+        value &= 0xFF;
+        address &= 0xFFFF;
+        var bank = self.banks[address / 0x4000];
+        var mappedAddress = (address % 0x4000) + (bank.page * 0x4000);
+        if (bank.flash) {
+            self.flash[mappedAddress] = value;
+        } else {
+            self.ram[mappedAddress] = value;
+        }
+    };
+
+    return self;
 };
