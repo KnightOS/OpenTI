@@ -6,48 +6,48 @@ window.openti.z80 = function() {
     self.writePort = null;
     af = bc = de = hl = ix = iy = 0;
     pc = 0; sp = 0;
-    i = 0; r = 0;
     self.registers = (function() {
         var self = this;
         af_ = bc_ = de_ = hl_ = ix_ = iy_ = 0;
+        i = 0; r = 0;
 
         self.AF = function(value) {
-            if (typeof value !== 'undefined') self.af = value & 0xFFFF;
+            if (typeof value !== 'undefined') af = value & 0xFFFF;
             return af;
         };
 
         self.BC = function(value) {
-            if (typeof value !== 'undefined') self.bc = value & 0xFFFF;
+            if (typeof value !== 'undefined') bc = value & 0xFFFF;
             return bc;
         };
 
         self.DE = function(value) {
-            if (typeof value !== 'undefined') self.de = value & 0xFFFF;
+            if (typeof value !== 'undefined') de = value & 0xFFFF;
             return de;
         };
 
         self.HL = function(value) {
-            if (typeof value !== 'undefined') self.hl = value & 0xFFFF;
+            if (typeof value !== 'undefined') hl = value & 0xFFFF;
             return hl;
         };
 
         self.IX = function(value) {
-            if (typeof value !== 'undefined') self.ix = value & 0xFFFF;
+            if (typeof value !== 'undefined') ix = value & 0xFFFF;
             return ix;
         };
 
         self.IY = function(value) {
-            if (typeof value !== 'undefined') self.iy = value & 0xFFFF;
+            if (typeof value !== 'undefined') iy = value & 0xFFFF;
             return iy;
         };
 
         self.PC = function(value) {
-            if (typeof value !== 'undefined') self.pc = value & 0xFFFF;
+            if (typeof value !== 'undefined') pc = value & 0xFFFF;
             return pc;
         };
         
         self.SP = function(value) {
-            if (typeof value !== 'undefined') self.sp = value & 0xFFFF;
+            if (typeof value !== 'undefined') sp = value & 0xFFFF;
             return sp;
         };
 
@@ -63,66 +63,66 @@ window.openti.z80 = function() {
 
         self.A = function(value) {
             if (typeof value !== 'undefined') {
-                self.af &= 0x00FF;
-                self.af |= (value & 0xFF) << 8;
+                af &= 0x00FF;
+                af |= (value & 0xFF) << 8;
             }
-            return (self.af & 0xFF00) >> 8;
+            return (af & 0xFF00) >> 8;
         };
 
         self.F = function(value) {
             if (typeof value !== 'undefined') {
-                self.af &= 0xFF00;
-                self.af |= value & 0xFF;
+                af &= 0xFF00;
+                af |= value & 0xFF;
             }
-            return self.af & 0x00FF;
+            return af & 0x00FF;
         };
 
         self.B = function(value) {
             if (typeof value !== 'undefined') {
-                self.bc &= 0x00FF;
-                self.bc |= (value & 0xFF) << 8;
+                bc &= 0x00FF;
+                bc |= (value & 0xFF) << 8;
             }
-            return (self.bc & 0xFF00) >> 8;
+            return (bc & 0xFF00) >> 8;
         };
 
         self.C = function(value) {
             if (typeof value !== 'undefined') {
-                self.bc &= 0xFF00;
-                self.bc |= value & 0xFF;
+                bc &= 0xFF00;
+                bc |= value & 0xFF;
             }
-            return self.bc & 0x00FF;
+            return bc & 0x00FF;
         };
 
         self.D = function(value) {
             if (typeof value !== 'undefined') {
-                self.de &= 0x00FF;
-                self.de |= (value & 0xFF) << 8;
+                de &= 0x00FF;
+                de |= (value & 0xFF) << 8;
             }
-            return (self.de & 0xFF00) >> 8;
+            return (de & 0xFF00) >> 8;
         };
 
         self.E = function(value) {
             if (typeof value !== 'undefined') {
-                self.de &= 0xFF00;
-                self.de |= value & 0xFF;
+                de &= 0xFF00;
+                de |= value & 0xFF;
             }
-            return self.af & 0x00FF;
+            return af & 0x00FF;
         };
 
         self.H = function(value) {
             if (typeof value !== 'undefined') {
-                self.hl &= 0x00FF;
-                self.hl |= (value & 0xFF) << 8;
+                hl &= 0x00FF;
+                hl |= (value & 0xFF) << 8;
             }
-            return (self.hl & 0xFF00) >> 8;
+            return (hl & 0xFF00) >> 8;
         };
 
         self.L = function(value) {
             if (typeof value !== 'undefined') {
-                self.hl &= 0xFF00;
-                self.hl |= value & 0xFF;
+                hl &= 0xFF00;
+                hl |= value & 0xFF;
             }
-            return self.hl & 0x00FF;
+            return hl & 0x00FF;
         };
         
         // TODO: IXH/IXL/IYH/IYL
@@ -130,45 +130,45 @@ window.openti.z80 = function() {
         self.flags = {
             S: function(value) {
                 if (typeof value !== 'undefined') {
-                    if (value) self.af |=  (1 << 7);
-                    else       self.af &= ~(1 << 7);
+                    if (value) af |=  (1 << 7);
+                    else       af &= ~(1 << 7);
                 }
-                return (self.af & (1 << 7)) > 0;
+                return (af & (1 << 7)) > 0;
             },
             Z: function(value) {
                 if (typeof value !== 'undefined') {
-                    if (value) self.af |=  (1 << 6);
-                    else       self.af &= ~(1 << 6);
+                    if (value) af |=  (1 << 6);
+                    else       af &= ~(1 << 6);
                 }
-                return (self.af & (1 << 6)) > 0;
+                return (af & (1 << 6)) > 0;
             },
             H: function(value) {
                 if (typeof value !== 'undefined') {
-                    if (value) self.af |=  (1 << 4);
-                    else       self.af &= ~(1 << 4);
+                    if (value) af |=  (1 << 4);
+                    else       af &= ~(1 << 4);
                 }
-                return (self.af & (1 << 4)) > 0;
+                return (af & (1 << 4)) > 0;
             },
             PV: function(value) {
                 if (typeof value !== 'undefined') {
-                    if (value) self.af |=  (1 << 2);
-                    else       self.af &= ~(1 << 2);
+                    if (value) af |=  (1 << 2);
+                    else       af &= ~(1 << 2);
                 }
-                return (self.af & (1 << 2)) > 0;
+                return (af & (1 << 2)) > 0;
             },
             N: function(value) {
                 if (typeof value !== 'undefined') {
-                    if (value) self.af |=  (1 << 1);
-                    else       self.af &= ~(1 << 1);
+                    if (value) af |=  (1 << 1);
+                    else       af &= ~(1 << 1);
                 }
-                return (self.af & (1 << 1)) > 0;
+                return (af & (1 << 1)) > 0;
             },
             C: function(value) {
                 if (typeof value !== 'undefined') {
-                    if (value) self.af |=  (1 << 0);
-                    else       self.af &= ~(1 << 0);
+                    if (value) af |=  (1 << 0);
+                    else       af &= ~(1 << 0);
                 }
-                return (self.af & (1 << 0)) > 0;
+                return (af & (1 << 0)) > 0;
             },
             update: function() {
                 // TODO: Some function to update flags based on the result of an operation
@@ -177,12 +177,12 @@ window.openti.z80 = function() {
 
         self.swap = function() {
             var temp;
-            temp = self.af; self.af = self.af_; self.af_ = temp;
-            temp = self.bc; self.bc = self.bc_; self.bc_ = temp;
-            temp = self.hl; self.hl = self.hl_; self.hl_ = temp;
-            temp = self.de; self.de = self.de_; self.de_ = temp;
-            temp = self.ix; self.ix = self.ix_; self.ix_ = temp;
-            temp = self.iy; self.iy = self.iy_; self.iy_ = temp;
+            temp = af; af = self.af_; self.af_ = temp;
+            temp = bc; bc = self.bc_; self.bc_ = temp;
+            temp = hl; hl = self.hl_; self.hl_ = temp;
+            temp = de; de = self.de_; self.de_ = temp;
+            temp = ix; ix = self.ix_; self.ix_ = temp;
+            temp = iy; iy = self.iy_; self.iy_ = temp;
         };
 
         return self;
