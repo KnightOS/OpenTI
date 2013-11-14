@@ -6,6 +6,19 @@ window.openti.z80 = function() {
     self.writePort = null;
     af = bc = de = hl = ix = iy = 0;
     pc = 0; sp = 0;
+    function countSetBits(value) {
+        // Used to set the P/V flag under some conditions
+        // There are some algorithms that do this faster, but we're already using JavaScript
+        // so performance isn't a huge concern, plus this doesn't happen often and it's only
+        // 8 bits.
+        var count = 0;
+        for (var i = 0; i < 8; i++) {
+            if (value & (1 << i) > 0) {
+                count++;
+            }
+        }
+        return count;
+    }
     self.registers = (function() {
         var self = this;
         af_ = bc_ = de_ = hl_ = ix_ = iy_ = 0;
@@ -170,8 +183,21 @@ window.openti.z80 = function() {
                 }
                 return (af & (1 << 0)) > 0;
             },
-            update: function() {
-                // TODO: Some function to update flags based on the result of an operation
+            update: function(oldValue, newValue, subtraction, parity) {
+                self.registers.flags.S((self.registers.A() & 0x80) == 0x80);
+                self.registers.flags.Z(newValue == 0);
+                // TODO: Half carry
+                if (parity) {
+                    self.registers.flags.PV(countSetBits(self.registers.A()) % 2 == 0);
+                } else {
+                    self.registers.flags.PV((oldValue & 0x80) == (newValue & 0x80));
+                }
+                self.registers.flags.N(subtraction);
+                if (addition) {
+                    self.registers.flags.C(newValue < oldValue);
+                } else {
+                    self.registers.flags.C(newValue > oldValue);
+                }
             }
         };
 
@@ -199,6 +225,7 @@ window.openti.z80 = function() {
     self.execute = function(cycles) {
         while (cycles > 0) {
             var instruction = self.readMemory(pc++);
+            var newValue;
             switch (instruction) {
                 case 0x00: // nop
                     cycles -= 4;
@@ -212,8 +239,24 @@ window.openti.z80 = function() {
                     self.writeMemory(bc, af >> 8);
                     cycles -= 7;
                     break;
+                case 0x03: // inc bc
+                    bc++;
+                    cycles -= 6;
+                    break;
+                case 0x04: // inc b
+                    newValue = (self.registers.B + 1) & 0xFF;
+                    self.registers.flags.update(self.registers.B(), newValue, false, false);
+                    self.registers.B(newValue);
+                    cycles -= 4;
+                    break;
+                case 0x05: // dec b
+                    newValue = (self.registers.B - 1) & 0xFF;
+                    self.registers.flags.update(self.registers.B(), newValue, true, false);
+                    self.registers.B(newValue);
+                    cycles -= 4;
+                    break;
                 default:
-                    cycles--; // TODO: Raise some sort of exception
+                    cycles--; // TODO: Raise some sort of error
                     break;
             }
         }
