@@ -191,6 +191,10 @@ window.openti.z80 = function() {
     function readWord(address) {
         return self.readMemory(address) | (self.readMemory(address + 1) << 8);
     };
+    function writeWord(address, word) {
+        self.writeMemory(address, word >> 8);
+        self.writeMemory(address, word & 0x00FF);
+    };
 
     self.execute = function(cycles) {
         while (cycles > 0) {
@@ -203,6 +207,10 @@ window.openti.z80 = function() {
                     self.registers.BC(readWord(pc));
                     pc += 2;
                     cycles -= 10;
+                    break;
+                case 0x02: // ld (bc), a
+                    self.writeMemory(bc, af >> 8);
+                    cycles -= 7;
                     break;
                 default:
                     cycles--; // TODO: Raise some sort of exception
