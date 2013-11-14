@@ -14,7 +14,8 @@ And all the variations on that theme. This is just a library, it's up to you to 
 ## Demo
 
 Work in progress. You can load up demo.html in your favorite browser and play with the JS stuff in
-the console. There's no LCD or keyboard emulation yet, so it's not very interactive at the moment.
+the console. There's no LCD or keyboard emulation yet, so it's not very interactive at the moment,
+but you can play around with window.calc, which has an instance of a TI-83+ in it.
 
 ## Contributing
 

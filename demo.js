@@ -1,3 +1,3 @@
 window.addEventListener('load', function() {
-    window.calc = new TI83p();
+    window.calc = new OpenTI.TI83p();
 }, false);
