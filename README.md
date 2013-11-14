@@ -11,16 +11,10 @@ An emulator for calculators with [KnightOS](https://github.com/KnightSoft/Knight
 
 And all the variations on that theme. This is just a library, it's up to you to use it.
 
-## Usage
+## Demo
 
-This runs in the browser or with node.js (intended for use with unit tests), whichever you prefer. Do
-this:
-
-    var ti = new TI84pSE();
-    // Flash memory or whatever
-    ti.tick(cycles);
-
-Read the docs for help, but this'll get you going.
+Work in progress. You can load up demo.html in your favorite browser and play with the JS stuff in
+the console. There's no LCD or keyboard emulation yet, so it's not very interactive at the moment.
 
 ## Contributing
 
