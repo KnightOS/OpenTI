@@ -238,7 +238,7 @@ window.openti.z80 = function() {
                     cycles -= 4;
                     break;
                 case 0x01: // ld bc, imm16
-                    self.registers.BC(readWord(pc));
+                    bc = readWord(pc);
                     pc += 2;
                     cycles -= 10;
                     break;
