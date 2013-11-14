@@ -36,8 +36,9 @@ window.TI83p = function() {
     self.asic = openti.asic(false, false);
     self.asic.privledgedPages = [ 0x1C, 0x1D, 0x1F ];
 
-    self.tick = self.asic.cpu.tick;
     self.cpu = self.asic.cpu;
+    self.mmu = self.asic.mmu;
+    self.execute = self.cpu.execute;
 
     return self;
 };

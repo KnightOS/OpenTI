@@ -19,7 +19,7 @@ window.openti.mmu = function(flashPages, ramPages) {
 
     self.readMemory = function(address) {
         address &= 0xFFFF;
-        var bank = self.banks[address / 0x4000];
+        var bank = self.banks[Math.floor(address / 0x4000)];
         var mappedAddress = (address % 0x4000) + (bank.page * 0x4000);
         if (bank.flash) {
             return self.flash[mappedAddress];
@@ -31,7 +31,7 @@ window.openti.mmu = function(flashPages, ramPages) {
     self.writeMemory = function(address, value) {
         value &= 0xFF;
         address &= 0xFFFF;
-        var bank = self.banks[address / 0x4000];
+        var bank = self.banks[Math.floor(address / 0x4000)];
         var mappedAddress = (address % 0x4000) + (bank.page * 0x4000);
         if (bank.flash) {
             // TODO: Flash stuff
@@ -43,7 +43,7 @@ window.openti.mmu = function(flashPages, ramPages) {
     self.forceWrite = function(address, value) {
         value &= 0xFF;
         address &= 0xFFFF;
-        var bank = self.banks[address / 0x4000];
+        var bank = self.banks[Math.floor(address / 0x4000)];
         var mappedAddress = (address % 0x4000) + (bank.page * 0x4000);
         if (bank.flash) {
             self.flash[mappedAddress] = value;

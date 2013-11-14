@@ -4,12 +4,12 @@ window.openti.z80 = function() {
     self.writeMemory = null;
     self.readPort = null;
     self.writePort = null;
+    af = bc = de = hl = ix = iy = 0;
+    pc = 0; sp = 0;
+    i = 0; r = 0;
     self.registers = (function() {
         var self = this;
-        af = bc = de = hl = ix = iy = 0;
         af_ = bc_ = de_ = hl_ = ix_ = iy_ = 0;
-        pc = 0; sp = 0;
-        i = 0; r = 0;
 
         self.AF = function(value) {
             if (typeof value !== 'undefined') self.af = value & 0xFFFF;
@@ -188,7 +188,28 @@ window.openti.z80 = function() {
         return self;
     })();
 
-    self.tick = function() {
+    function readWord(address) {
+        return self.readMemory(address) | (self.readMemory(address + 1) << 8);
+    };
+
+    self.execute = function(cycles) {
+        while (cycles > 0) {
+            var instruction = self.readMemory(pc++);
+            switch (instruction) {
+                case 0x00: // nop
+                    cycles -= 4;
+                    break;
+                case 0x01: // ld bc, imm16
+                    self.registers.BC(readWord(pc));
+                    pc += 2;
+                    cycles -= 10;
+                    break;
+                default:
+                    cycles--; // TODO: Raise some sort of exception
+                    break;
+            }
+        }
+        return cycles;
     };
 
     return self;
