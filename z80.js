@@ -79,7 +79,7 @@ window.openti.z80 = function() {
                 af &= 0x00FF;
                 af |= (value & 0xFF) << 8;
             }
-            return (af & 0xFF00) >> 8;
+            return af >> 8;
         };
 
         self.F = function(value) {
@@ -95,7 +95,7 @@ window.openti.z80 = function() {
                 bc &= 0x00FF;
                 bc |= (value & 0xFF) << 8;
             }
-            return (bc & 0xFF00) >> 8;
+            return bc >> 8;
         };
 
         self.C = function(value) {
@@ -111,7 +111,7 @@ window.openti.z80 = function() {
                 de &= 0x00FF;
                 de |= (value & 0xFF) << 8;
             }
-            return (de & 0xFF00) >> 8;
+            return de >> 8;
         };
 
         self.E = function(value) {
@@ -127,7 +127,7 @@ window.openti.z80 = function() {
                 hl &= 0x00FF;
                 hl |= (value & 0xFF) << 8;
             }
-            return (hl & 0xFF00) >> 8;
+            return hl >> 8;
         };
 
         self.L = function(value) {
