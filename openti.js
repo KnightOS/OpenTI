@@ -25,6 +25,13 @@
             }
             return count;
         }
+        function readSigned(address) {
+            var value = readMemory(address);
+            if ((value & 0x80) > 0) {
+                value &= 0x7F;
+                value = -value;
+            }
+        }
         self.registers = (function() {
             var self = this;
             var af_ = bc_ = de_ = hl_ = ix_ = iy_ = 0;
@@ -189,7 +196,8 @@
                     }
                     return (af & (1 << 0)) > 0;
                 },
-                update: function(oldValue, newValue, subtraction, parity, unaffected) {
+                update: function(oldValue, newValue, subtraction, unaffected, parity) {
+                    if (!unaffected) unaffected = '';
                     if (unaffected.indexOf('S') == -1)
                         self.flags.S((self.A() & 0x80) == 0x80);
                     if (unaffected.indexOf('Z') == -1)
@@ -214,14 +222,21 @@
                 }
             };
 
-            self.swap = function() {
+            self.exx = function() {
                 var temp;
-                temp = af; af = self.af_; self.af_ = temp;
                 temp = bc; bc = self.bc_; self.bc_ = temp;
                 temp = hl; hl = self.hl_; self.hl_ = temp;
                 temp = de; de = self.de_; self.de_ = temp;
-                temp = ix; ix = self.ix_; self.ix_ = temp;
-                temp = iy; iy = self.iy_; self.iy_ = temp;
+            };
+
+            self.exAF = function() {
+                var temp;
+                temp = af; af = self.af_; self.af_ = temp;
+            };
+
+            self.exDEHL = function() {
+                var temp;
+                temp = de; de = hl; hl = temp;
             };
 
             return self;
@@ -238,7 +253,7 @@
         self.execute = function(cycles) {
             while (cycles > 0) {
                 var instruction = self.readMemory(pc++);
-                var newValue;
+                var newValue, bit;
                 switch (instruction) {
                     case 0x00: // nop
                         cycles -= 4;
@@ -258,15 +273,85 @@
                         break;
                     case 0x04: // inc b
                         newValue = (self.registers.B() + 1) & 0xFF;
-                        self.registers.flags.update(self.registers.B(), newValue, false, false, 'C');
+                        self.registers.flags.update(self.registers.B(), newValue, false, 'C');
                         self.registers.B(newValue);
                         cycles -= 4;
                         break;
                     case 0x05: // dec b
                         newValue = (self.registers.B() - 1) & 0xFF;
-                        self.registers.flags.update(self.registers.B(), newValue, true, false, 'C');
+                        self.registers.flags.update(self.registers.B(), newValue, true, 'C');
                         self.registers.B(newValue);
                         cycles -= 4;
+                        break;
+                    case 0x06: // ld b, imm8
+                        bc &= 0x00FF;
+                        bc |= self.readMemory(pc++) << 8;
+                        cycles -= 7;
+                        break;
+                    case 0x07: // rlca
+                        bit = (af & 0x8000) > 0;
+                        newValue = ((af << 1) & 0xFF00);
+                        af &= 0x00FF; af |= newValue;
+                        self.registers.flags.C(bit);
+                        self.registers.flags.N(false);
+                        self.registers.flags.H(false);
+                        if (bit) af |= 0x0100;
+                        cycles -= 4;
+                        break;
+                    case 0x08: // ex af, af'
+                        self.registers.exAF();
+                        cycles -= 4;
+                        break;
+                    case 0x09: // add hl, bc
+                        newValue = (hl + bc) & 0xFFFF;
+                        self.registers.flags.update(hl, newValue, false, 'ZSP');
+                        hl = newValue;
+                        cycles -= 11;
+                        break;
+                    case 0x0A: // ld a, (bc)
+                        self.registers.A(self.readMemory(bc));
+                        cycles -= 11;
+                        break;
+                    case 0x0B: // dec bc
+                        bc = (bc - 1) & 0xFFFF;
+                        cycles -= 6;
+                        break;
+                    case 0x0C: // inc c
+                        newValue = (self.registers.C() + 1) & 0xFF;
+                        self.flags.update(self.registers.C(), newValue, false, 'C');
+                        self.registers.C(newValue);
+                        cycles -= 4;
+                        break;
+                    case 0x0D: // dec c
+                        newValue = (self.registers.C() - 1) & 0xFF;
+                        self.flags.update(self.registers.C(), newValue, true, 'C');
+                        self.registers.C(newValue);
+                        cycles -= 4;
+                        break;
+                    case 0x0E: // ld c, imm8
+                        bc &= 0xFF00;
+                        bc |= self.readMemory(pc++);
+                        cycles -= 7;
+                        break;
+                    case 0x0F: // rrca
+                        bit = (af & 0x0100) > 0;
+                        newValue = ((af >> 1) & 0xFF00);
+                        af &= 0x00FF; af |= newValue;
+                        self.registers.flags.C(bit);
+                        self.registers.flags.N(false);
+                        self.registers.flags.H(false);
+                        if (bit) af |= 0x8000;
+                        cycles -= 4;
+                        break;
+                    case 0x10: // djnz imm8
+                        newValue = ((bc & 0xFF00) >> 8) - 1;
+                        newValue &= 0xFF;
+                        bc |= newValue;
+                        if (newValue != 0) {
+                            pc += readSigned(pc);
+                            cycles -= 8;
+                        } else cycles -= 13;
+                        pc++;
                         break;
                     default:
                         cycles--; // TODO: Raise some sort of error
