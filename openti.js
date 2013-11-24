@@ -200,7 +200,7 @@
                     var q = (opcode & 0x08) >> 3;
                     function d() { return self.readMemory(r.PC++); }
                     function n() { return self.readMemory(r.PC++); }
-                    function nn() { var r = readWord(r.PC); r.PC += 2; return r; }
+                    function nn() { var v = readWord(r.PC); r.PC += 2; return v; }
                 }
             }
             return cycles;
