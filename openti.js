@@ -4,7 +4,6 @@
  * https://github.com/SirCmpwn/OpenTI
  */
 (function(exports) {
-    "use strict";
     function z80() {
         var self = this;
         self.readMemory = null;
