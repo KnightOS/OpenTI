@@ -194,7 +194,7 @@
                     { read: function() { return re.E; }, write: function(v) { re.E = v; } },
                     { read: function() { return re.H; }, write: function(v) { re.H = v; } },
                     { read: function() { return re.L; }, write: function(v) { re.L = v; } },
-                    { read: function() { this.cycles += 3; return readMemory(re.HL); }, write: function(v) { this.cycles += 3; writeMemory(re.HL, v); } },
+                    { read: function() { this.cycles += 3; return self.readMemory(re.HL); }, write: function(v) { this.cycles += 3; self.writeMemory(re.HL, v); } },
                     { read: function() { return re.A; }, write: function(v) { re.A = v; } }
                 ],
                 rp: [
@@ -299,7 +299,7 @@
                             if (context.z == 6 && context.y == 6) {
                                 // HALT (TODO)
                             } else {
-                                context.cycles = 4;
+                                context.cycles += 4;
                                 self.tables.r[context.y].write.apply(context, [self.tables.r[context.z].read.apply(context)]);
                                 cycles -= context.cycles;
                             }
