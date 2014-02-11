@@ -60,33 +60,33 @@
             function reg8pair(name) {
                 var high = name.substr(0, 1);
                 var low = name.substr(1);
+                var reg = 0;
                 Object.defineProperty(self, name, {
                     get: function() {
-                        return self['reg_' + name];
+                        return reg;
                     },
                     set: function(val) {
-                        self['reg_' + name] = val & 0xFFFF;
+                        reg = val & 0xFFFF;
                     }
                 });
                 Object.defineProperty(self, low, {
                     get: function() {
-                        return self['reg_' + name] & 0xFF;
+                        return reg & 0xFF;
                     },
                     set: function(val) {
-                        self[name] &= ~0xFF;
-                        self[name] |= (val & 0xFF);
+                        reg &= ~0xFF;
+                        reg |= (val & 0xFF);
                     }
                 });
                 Object.defineProperty(self, high, {
                     get: function() {
-                        return self['reg_' + name] >> 8;
+                        return reg >> 8;
                     },
                     set: function(val) {
-                        self[name] &= ~0xFF00;
-                        self[name] |= ((val & 0xFF) << 8);
+                        reg &= ~0xFF00;
+                        reg |= ((val & 0xFF) << 8);
                     }
                 });
-                self[name] = 0;
             };
             function reg16(name) {
                 Object.defineProperty(self, name, {
