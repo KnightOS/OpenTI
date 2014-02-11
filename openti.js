@@ -62,15 +62,15 @@
                 var low = name.substr(1);
                 Object.defineProperty(self, name, {
                     get: function() {
-                        return this.val;
+                        return self['reg_' + name];
                     },
                     set: function(val) {
-                        this.val = val & 0xFFFF;
+                        self['reg_' + name] = val & 0xFFFF;
                     }
                 });
                 Object.defineProperty(self, low, {
                     get: function() {
-                        return this.val & 0xFF;
+                        return self['reg_' + name] & 0xFF;
                     },
                     set: function(val) {
                         self[name] &= ~0xFF;
@@ -79,7 +79,7 @@
                 });
                 Object.defineProperty(self, high, {
                     get: function() {
-                        return this.val >> 8;
+                        return self['reg_' + name] >> 8;
                     },
                     set: function(val) {
                         self[name] &= ~0xFF00;
@@ -115,11 +115,11 @@
             function flagdef(name, bit) {
                 Object.defineProperty(self.flags, name, {
                     get: function() {
-                        return (self.AF & (1 << bit)) > 0;
+                        return (self.AF & (1 << bit));
                     },
                     set: function(val) {
-                        if (val) self.AF |=  (1 << bit);
-                        else     self.AF &= ~(1 << bit);
+                        if (val == 1) self.AF |=  (1 << bit);
+                        else          self.AF &= ~(1 << bit);
                     }
                 });
             };
@@ -132,24 +132,24 @@
             self.updateFlags = function(oldValue, newValue, subtraction, unaffected, parity) {
                 if (!unaffected) unaffected = '';
                 if (unaffected.indexOf('S') == -1)
-                    self.flags.S = (self.A() & 0x80) == 0x80;
+                    self.flags.S = (self.A & 0x80) == 0x80 ? 1 : 0;
                 if (unaffected.indexOf('Z') == -1)
-                    self.flags.Z = newValue == 0;
+                    self.flags.Z = newValue & 1;
                 // TODO: Half carry
                 if (unaffected.indexOf('P') == -1) {
                     if (parity) {
-                        self.flags.PV = countSetBits(self.A()) % 2 == 0;
+                        self.flags.PV = countSetBits(self.A) % 2 & 1;
                     } else {
-                        self.flags.PV = (oldValue & 0x80) == (newValue & 0x80);
+                        self.flags.PV = (oldValue & 0x80) == (newValue & 0x80) ? 1 : 0;
                     }
                 }
                 if (unaffected.indexOf('N') == -1)
-                    self.flags.N = subtraction;
+                    self.flags.N = subtraction ? 1 : 0;
                 if (unaffected.indexOf('C') == -1) {
                     if (subtraction) {
-                        self.flags.C = newValue > oldValue;
+                        self.flags.C = newValue > oldValue ? 1 : 0;
                     } else {
-                        self.flags.C = newValue < oldValue;
+                        self.flags.C = newValue < oldValue ? 1 : 0;
                     }
                 }
             };
@@ -182,25 +182,134 @@
             self.writeMemory(address, word & 0x00FF);
         };
 
+        self.tables = (function() {
+            // Assume x, y, z, p, q, d, n, nn, and cycles are defined in the `this` context
+            var re = self.registers;
+            var tables = {
+                cycles: { r: 0, rp: 0, rp2: 0, alu: 4 }, // Base cycles used by each group, some conditions add more
+                r: [
+                    { read: function() { return re.B; }, write: function(v) { re.B = v; } },
+                    { read: function() { return re.C; }, write: function(v) { re.C = v; } },
+                    { read: function() { return re.D; }, write: function(v) { re.D = v; } },
+                    { read: function() { return re.E; }, write: function(v) { re.E = v; } },
+                    { read: function() { return re.H; }, write: function(v) { re.H = v; } },
+                    { read: function() { return re.L; }, write: function(v) { re.L = v; } },
+                    { read: function() { this.cycles += 3; return readMemory(re.HL); }, write: function(v) { this.cycles += 3; writeMemory(re.HL, v); } },
+                    { read: function() { return re.A; }, write: function(v) { re.A = v; } }
+                ],
+                rp: [
+                    { read: function() { return re.BC; }, write: function(v) { re.BC = v; } },
+                    { read: function() { return re.DE; }, write: function(v) { re.DE = v; } },
+                    { read: function() { return re.HL; }, write: function(v) { re.HL = v; } },
+                    { read: function() { return re.SP; }, write: function(v) { re.SP = v; } }
+                ],
+                rp2: [
+                    { read: function() { return re.BC; }, write: function(v) { re.BC = v; } },
+                    { read: function() { return re.DE; }, write: function(v) { re.DE = v; } },
+                    { read: function() { return re.HL; }, write: function(v) { re.HL = v; } },
+                    { read: function() { return re.AF; }, write: function(v) { re.SP = v; } }
+                ],
+                cc: [
+                    { read: function() { return !re.flags.Z; }, write: function(v) { re.flags.Z = !v; } },
+                    { read: function() { return re.flags.Z; }, write: function(v) { re.flags.Z = v; } },
+                    { read: function() { return !re.flags.C; }, write: function(v) { re.flags.C = !v; } },
+                    { read: function() { return re.flags.C; }, write: function(v) { re.flags.C = v; } },
+                    { read: function() { return !re.flags.PV; }, write: function(v) { re.flags.PV = !v; } },
+                    { read: function() { return re.flags.PV; }, write: function(v) { re.flags.PV = v; } },
+                    { read: function() { return !re.flags.N; }, write: function(v) { re.flags.N = !v; } },
+                    { read: function() { return re.flags.N; }, write: function(v) { re.flags.N = v; } }
+                ],
+                alu: [ // Arithmetic functions (all of these take 4 cycles)
+                    function(v) { // ADD A, v
+                        var old = re.A;
+                        re.A += v;
+                        re.updateFlags(old, re.A);
+                    },
+                    function(v) { // ADC A, v
+                        var old = re.A;
+                        re.A += v;
+                        re.A += re.flags.C;
+                        re.updateFlags(old, re.A);
+                    },
+                    function(v) { // SUB A, v
+                        var old = re.A;
+                        re.A -= v;
+                        re.updateFlags(old, re.A, true);
+                    },
+                    function(v) { // SBC A, v
+                        var old = re.A;
+                        re.A -= v;
+                        re.A -= re.flags.C;
+                        re.updateFlags(old, re.A, true);
+                    },
+                    function(v) { // AND A, v
+                        var old = re.A;
+                        re.A &= v;
+                        updateFlags(re.A, old);
+                        re.flags.C = 0; re.flags.N = 0; re.flags.H = 1;
+                    },
+                    function(v) { // XOR A, v
+                        var old = re.A;
+                        re.A ^= v;
+                        updateFlags(re.A, old);
+                        re.flags.C = 0; re.flags.N = 0; re.flags.H = 0;
+                    },
+                    function(v) { // OR A, v
+                        var old = re.A;
+                        re.A |= value;
+                        updateFlags(re.A, old);
+                        re.flags.C = 0; re.flags.N = 0; re.flags.H = 0;
+                    },
+                    function(v) { // CP A, v
+                        var old = re.A;
+                        var a = (re.A - v) & 0xFF;
+                        updateFlags(a, old, true);
+                    }
+                ],
+            };
+            return tables;
+        })();
+
         self.execute = function(cycles) {
             while (cycles > 0) {
                 var r = self.registers;
                 var instruction = self.readMemory(r.PC++);
-                if (instruction == 0xCB || instruction == 0xDD || instruction == 0xED || instruction == 0xFD) { // Prefix bytes
-                    // TODO
+                var opcode = instruction;
+                // Decode
+                var context = {
+                    cycles: 0,
+                    opcode: opcode,
+                    x: (opcode & 0xC0) >> 6,
+                    y: (opcode & 0x38) >> 3,
+                    z: (opcode & 0x07),
+                    p: (opcode & 0x30) >> 4,
+                    q: (opcode & 0x08) >> 3
+                };
+                // Fancy decoding
+                Object.defineProperty(context, 'd', { get: function() { return self.readMemory(r.PC++); } });
+                Object.defineProperty(context, 'n', { get: function() { return self.readMemory(r.PC++); } });
+                Object.defineProperty(context, 'nn', { get: function() { var v = readWord(r.PC); r.PC += 2; return v; } });
+                if (instruction == 0xCB || instruction == 0xDD || instruction == 0xED || instruction == 0xFD) { // Prefix bytes TODO
                     var opcode = self.readMemory(r.PC++);
                     cycles--;
                 } else {
-                    var opcode = instruction;
-                    // Decode
-                    var x = (opcode & 0xC0) >> 6;
-                    var y = (opcode & 0x38) >> 3;
-                    var z = (opcode & 0x07);
-                    var p = (opcode & 0x30) >> 4;
-                    var q = (opcode & 0x08) >> 3;
-                    function d() { return self.readMemory(r.PC++); }
-                    function n() { return self.readMemory(r.PC++); }
-                    function nn() { var v = readWord(r.PC); r.PC += 2; return v; }
+                    // Execute
+                    switch (context.x) {
+                        case 1:
+                            if (context.z == 6 && context.y == 6) {
+                                // HALT (TODO)
+                            } else {
+                                context.cycles = 4;
+                                self.tables.r[context.y].write.apply(context, [self.tables.r[context.z].read.apply(context)]);
+                                cycles -= context.cycles;
+                            }
+                            break;
+                        case 2: // ALU instructions
+                            context.cycles += self.tables.cycles.alu;
+                            self.tables.alu[context.y].apply(context, [self.tables.r[context.z].read.apply(context)]);
+                            cycles -= context.cycles;
+                            break;
+                    }
                 }
             }
             return cycles;
