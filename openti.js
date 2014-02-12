@@ -210,16 +210,16 @@
                     { read: function() { return re.AF; }, write: function(v) { re.SP = v; } }
                 ],
                 cc: [
-                    { read: function() { return !re.flags.Z; }, write: function(v) { re.flags.Z = !v; } },
+                    { read: function() { return ~re.flags.Z; }, write: function(v) { re.flags.Z = ~v; } },
                     { read: function() { return re.flags.Z; }, write: function(v) { re.flags.Z = v; } },
-                    { read: function() { return !re.flags.C; }, write: function(v) { re.flags.C = !v; } },
+                    { read: function() { return ~re.flags.C; }, write: function(v) { re.flags.C = ~v; } },
                     { read: function() { return re.flags.C; }, write: function(v) { re.flags.C = v; } },
-                    { read: function() { return !re.flags.PV; }, write: function(v) { re.flags.PV = !v; } },
+                    { read: function() { return ~re.flags.PV; }, write: function(v) { re.flags.PV = ~v; } },
                     { read: function() { return re.flags.PV; }, write: function(v) { re.flags.PV = v; } },
-                    { read: function() { return !re.flags.N; }, write: function(v) { re.flags.N = !v; } },
+                    { read: function() { return ~re.flags.N; }, write: function(v) { re.flags.N = ~v; } },
                     { read: function() { return re.flags.N; }, write: function(v) { re.flags.N = v; } }
                 ],
-                alu: [ // Arithmetic functions (all of these take 4 cycles)
+                alu: [ // Arithmetic functions
                     function(v) { // ADD A, v
                         var old = re.A;
                         re.A += v;
@@ -266,6 +266,56 @@
                         updateFlags(a, old, true);
                     }
                 ],
+                rot: [ // TODO
+                ],
+                im: [ // TODO
+                ],
+                bli: [ // "Block" instructions
+                    [null, null, null, null], // nop TODO: Is it really?
+                    [null, null, null, null], // nop
+                    [null, null, null, null], // nop
+                    [null, null, null, null], // nop
+                    [
+                        function() { // LDI
+                        },
+                        function() { // CPI
+                        },
+                        function() { // INI
+                        },
+                        function() { // OUTI
+                        }
+                    ],
+                    [
+                        function() { // LDD
+                        },
+                        function() { // CPD
+                        },
+                        function() { // IND
+                        },
+                        function() { // OUTD
+                        }
+                    ],
+                    [
+                        function() { // LDIR
+                        },
+                        function() { // CPIR
+                        },
+                        function() { // INIR
+                        },
+                        function() { // OTIR
+                        }
+                    ],
+                    [
+                        function() { // LDDR
+                        },
+                        function() { // CPDR
+                        },
+                        function() { // INDR
+                        },
+                        function() { // OTDR
+                        }
+                    ]
+                ]
             };
             return tables;
         })();
