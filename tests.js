@@ -15,19 +15,41 @@ test.assert({ expected register values }, { expected flag values }, { expected c
  */
 
 var tests = {
-    'ADD A, n': function(test) {
+    'ADD A, r': function(test) {
         test.stage([ 0x80 /* ADD A, B */ ], { A: 10, B: 20 });
         test.execute();
-        test.assert({ A: 30, B: 20 }, { Z: 0, C: 0 }, 4);
+        test.assert({ A: 30 }, { Z: 0, C: 0 }, 4);
 
         test.stage([ 0x80 /* ADD A, B */ ], { A: 0xF0, B: 0x20 });
         test.execute();
-        test.assert({ A: 0x10, B: 0x20 }, { Z: 0, C: 1 }, 4);
+        test.assert({ A: 0x10 }, { Z: 0, C: 1 }, 4);
 
         test.stage([ 0x86 /* ADD A, (HL) */ ], { A: 0, HL: 0xC000 });
         test.calc.mmu.forceWrite(0xC000, 10);
         test.execute();
         test.assert({ A: 10 }, { Z: 0, C: 0 }, 7);
+    },
+    'ADC A, r': function(test) {
+        test.stage([ 0x88 /* ADC A, B */ ], { A: 10, B: 20 }, { C: 0 });
+        test.execute();
+        test.assert({ A: 30 }, { Z: 0, C: 0 }, 4);
+
+        test.stage([ 0x88 /* ADC A, B */ ], { A: 10, B: 20 }, { C: 1 });
+        test.execute();
+        test.assert({ A: 31 }, { Z: 0, C: 0 }, 4);
+
+        test.stage([ 0x88 /* ADC A, B */ ], { A: 0xFF, B: 0 }, { C: 1 });
+        test.execute();
+        test.assert({ A: 0 }, { Z: 1, C: 1 }, 4);
+    },
+    'SUB A, r': function(test) {
+        test.stage([ 0x90 /* SUB A, B */ ], { A: 0x10, B: 0x20 });
+        test.execute();
+        test.assert({ A: 0xF0 }, { Z: 0, C: 1 }, 4);
+
+        test.stage([ 0x90 /* SUB A, B */ ], { A: 20, B: 10 });
+        test.execute();
+        test.assert({ A: 10 }, { Z: 0, C: 0 }, 4);
     }
 };
 
@@ -82,11 +104,10 @@ function createTestContext() {
     };
 }
 
+var passed = []; var failed = [];
 for (var test in tests) {
     var context = createTestContext();
-    var passed = [];
-    var failed = [];
-    process.stdout.write('Running test "' + test + '"');
+    process.stdout.write('Testing "' + test + '"');
     try {
         tests[test](context, context.calc);
         console.log(': PASS');
@@ -100,6 +121,6 @@ for (var test in tests) {
             throw m;
         }
     }
-    console.log(passed.length + ' tests passed.');
-    console.log(failed.length + ' tests failed.');
 }
+console.log(passed.length + ' tests passed.');
+console.log(failed.length + ' tests failed.');
