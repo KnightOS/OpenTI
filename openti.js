@@ -363,7 +363,7 @@
                     case 0:
                         switch (context.y) {
                         case 0: // NOP
-                            context.cycles -= 4;
+                            context.cycles += 4;
                             break;
                         case 1: // EX AF, AF'
                             context.cycles += 4;
@@ -372,6 +372,10 @@
                         case 2: // DJNZ d
                             break;
                         case 3: // JR d
+                            context.cycles += 12;
+                            var target = context.d;
+                            target -= 0x80;
+                            r.PC += target;
                             break;
                         case 4:
                         case 5:
