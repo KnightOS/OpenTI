@@ -395,6 +395,12 @@
                         case 5:
                         case 6:
                         case 7: // JR cc[y-4], d
+                            context.cycles += 7;
+                            var target = context.d;
+                            if (self.tables.cc[context.y - 4].read.apply(context) == 1) {
+                                context.cycles += 5;
+                                r.PC += target;
+                            }
                             break;
                         }
                         break;
