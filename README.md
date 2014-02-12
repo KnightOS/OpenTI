@@ -18,17 +18,27 @@ This software is not complete, or even usable. Your help would be great!
 Fork the repository and submit a pull request to contribute. You can also check out #knightos on
 irc.freenode.net to talk about development. Please stick to the coding style already in place.
 
-To test your work, open demo.html and pull up the Javascript console. `window.calc` will be a
-TI83p object ready for you to play with. For example, to run some test code:
+To test your work, start up node.js and require the module. Here's an example of how I might test
+`ADD A, B`:
 
-    calc.mmu.forceWrite(0x0000, 0x80); // Write ADD A, B
-    calc.cpu.registers.A = 50;
-    calc.cpu.registers.B = 30;
-    calc.cpu.execute(1); // calc.cpu.execute(cycles) -> returns remaining cycles
-    // Observe that these conditions are true:
-    calc.cpu.registers.A == 80;
-    calc.cpu.registers.flags.Z == 0;
-    calc.cpu.registers.flags.C == 0;
+    > var OpenTI = require('./openti.js')
+    undefined
+    > var calc = new OpenTI.TI83p();
+    undefined
+    > calc.mmu.forceWrite(0, 0x80); // 0x80 is ADD A, B
+    undefined
+    > calc.cpu.registers.A = 10
+    10
+    > calc.cpu.registers.B = 20
+    20
+    > calc.cpu.execute(1)
+    -3
+    > calc.cpu.registers.A
+    30
+    > calc.cpu.registers.flags.Z
+    0
+    > calc.cpu.registers.flags.C
+    0
 
 The easiest way to contribute is to implement some more instructions. Look around the execute
 function to find some to work on - decoding is mostly done, you just have to implement the
