@@ -89,15 +89,15 @@
                 });
             };
             function reg16(name) {
+                var reg = 0;
                 Object.defineProperty(self, name, {
                     get: function() {
-                        return this.val;
+                        return reg;
                     },
                     set: function(val) {
-                        this.val = val & 0xFFFF;
+                        reg = val & 0xFFFF;
                     }
                 });
-                self[name] = 0;
             }
             // TODO: IXH/IXL/IYH/IYL
             reg8pair('AF');
@@ -171,6 +171,13 @@
                 temp = self.DE; self.DE = self.HL; self.HL = temp;
             };
 
+            self.exDerefSPHL = function() {
+                var temp;
+                temp = self.HL;
+                self.HL = readWord(self.SP);
+                writeWord(self.SP, temp);
+            };
+
             return self;
         })();
 
@@ -179,7 +186,7 @@
         };
         function writeWord(address, word) {
             self.writeMemory(address, word >> 8);
-            self.writeMemory(address, word & 0x00FF);
+            self.writeMemory(address + 1, word & 0x00FF);
         };
 
         self.tables = (function() {
@@ -339,184 +346,212 @@
                 Object.defineProperty(context, 'd', { get: function() { return self.readMemory(r.PC++); } });
                 Object.defineProperty(context, 'n', { get: function() { return self.readMemory(r.PC++); } });
                 Object.defineProperty(context, 'nn', { get: function() { var v = readWord(r.PC); r.PC += 2; return v; } });
+
+                var push = function(v) {
+                    r.SP = r.SP - 2;
+                    writeWord(r.SP, v);
+                };
+                var pop = function() {
+                    var v = readWord(r.SP);
+                    r.SP = r.SP + 2;
+                    return v;
+                };
                 // Execute
                 switch (context.x) {
+                case 0:
+                    switch (context.z) {
                     case 0:
-                        switch (context.z) {
-                            case 0:
-                                switch (context.y) {
-                                    case 0: // NOP
-                                        cycles -= 4;
-                                        break;
-                                    case 1: // EX AF, AF'
-                                        r.exAF();
-                                        break;
-                                    case 2: // DJNZ d
-                                        break;
-                                    case 3: // JR d
-                                        break;
-                                    case 4:
-                                    case 5:
-                                    case 6:
-                                    case 7: // JR cc[y-4], d
-                                        break;
-                                }
-                                break;
-                            case 1:
-                                switch (context.q) {
-                                    case 0: // LD rp[p], nn
-                                        break;
-                                    case 1: // ADD HL, rp[p]
-                                        break;
-                                }
-                                break;
-                            case 2:
-                                switch (context.q) {
-                                    case 0:
-                                        switch (context.p) {
-                                            case 0: // LD (BC), A
-                                                break;
-                                            case 1: // LD (DE), A
-                                                break;
-                                            case 2: // LD (nn), HL
-                                                break;
-                                            case 3: // LD (nn), A
-                                                break;
-                                        }
-                                        break;
-                                    case 1:
-                                        switch (context.p) {
-                                            case 0: // LD A, (BC)
-                                                break;
-                                            case 1: // LD A, (DE)
-                                                break;
-                                            case 2: // LD HL, (nn)
-                                                break;
-                                            case 3: // LD A, (nn)
-                                                break;
-                                        }
-                                        break;
-                                }
-                                break;
-                            case 3:
-                                switch (context.q) {
-                                    case 0: // INC rp[p]
-                                        break;
-                                    case 1: // DEC rp[p]
-                                        break;
-                                }
-                                break;
-                            case 4: // INC r[y]
-                                break;
-                            case 5: // DEC r[y]
-                                break;
-                            case 6: // LD r[y], n
-                                break;
-                            case 7:
-                                switch (context.y) {
-                                    case 0: // RLCA
-                                        break;
-                                    case 1: // RRCA
-                                        break;
-                                    case 2: // RLA
-                                        break;
-                                    case 3: // RRA
-                                        break;
-                                    case 4: // DAA
-                                        break;
-                                    case 5: // CPL
-                                        break;
-                                    case 6: // SCF
-                                        break;
-                                    case 7: // CCF
-                                        break;
-                                }
-                                break;
+                        switch (context.y) {
+                        case 0: // NOP
+                            cycles -= 4;
+                            break;
+                        case 1: // EX AF, AF'
+                            context.cycles += 4;
+                            r.exAF();
+                            break;
+                        case 2: // DJNZ d
+                            break;
+                        case 3: // JR d
+                            break;
+                        case 4:
+                        case 5:
+                        case 6:
+                        case 7: // JR cc[y-4], d
+                            break;
                         }
                         break;
                     case 1:
-                        if (context.z == 6 && context.y == 6) {
-                            // HALT (TODO)
-                        } else {
-                            context.cycles += 4;
-                            self.tables.r[context.y].write.apply(context, [self.tables.r[context.z].read.apply(context)]);
-                            cycles -= context.cycles;
+                        switch (context.q) {
+                        case 0: // LD rp[p], nn
+                            break;
+                        case 1: // ADD HL, rp[p]
+                            break;
                         }
                         break;
-                    case 2: // ALU instructions
-                        context.cycles += self.tables.cycles.alu;
-                        self.tables.alu[context.y].apply(context, [self.tables.r[context.z].read.apply(context)]);
-                        cycles -= context.cycles;
+                    case 2:
+                        switch (context.q) {
+                        case 0:
+                            switch (context.p) {
+                            case 0: // LD (BC), A
+                                break;
+                            case 1: // LD (DE), A
+                                break;
+                            case 2: // LD (nn), HL
+                                break;
+                            case 3: // LD (nn), A
+                                break;
+                            }
+                            break;
+                        case 1:
+                            switch (context.p) {
+                            case 0: // LD A, (BC)
+                                break;
+                            case 1: // LD A, (DE)
+                                break;
+                            case 2: // LD HL, (nn)
+                                break;
+                            case 3: // LD A, (nn)
+                                break;
+                            }
+                            break;
+                        }
                         break;
                     case 3:
-                        switch (context.z) {
-                            case 0: // RET cc[y]
-                                break;
-                            case 1:
-                                if (context.q == 0) { // POP rp2[p]
-                                } else {
-                                    switch (context.p) {
-                                        case 0: // RET
-                                            break;
-                                        case 1: // EXX
-                                            r.exx();
-                                            break;
-                                        case 2: // JP HL
-                                            break;
-                                        case 3: // LD SP, HL
-                                            break;
-                                    }
-                                }
-                                break;
-                            case 2: // JP cc[y], nn
-                                break;
-                            case 3:
-                                switch (context.y) {
-                                    case 0: // JP nn
-                                        break;
-                                    case 1: // (CB prefixed opcodes)
-                                        break;
-                                    case 2: // OUT (n), A
-                                        break;
-                                    case 3: // IN A, (n)
-                                        break;
-                                    case 4: // EX (SP), HL
-                                        break;
-                                    case 5: // EX DE, HL
-                                        break;
-                                    case 6: // DI
-                                        break;
-                                    case 7: // EI
-                                        break;
-                                }
-                                break;
-                            case 4: // CALL cc[y], nn
-                                break;
-                            case 5:
-                                if (context.q == 0) { // PUSH rp2[p]
-                                } else {
-                                    switch (context.p) {
-                                        case 0: // CALL nn
-                                            break;
-                                        case 1: // (DD prefixed opcodes)
-                                            break;
-                                        case 2: // (ED prefixed opcodes)
-                                            break;
-                                        case 3: // (FD prefixed opcodes)
-                                            break;
-                                    }
-                                }
-                                break;
-                            case 6: // alu[y] n
-                                context.cycles += self.tables.cycles.alu;
-                                cycles += 3;
-                                self.tables.alu[context.y].apply(context, [context.n]);
-                                cycles -= context.cycles;
-                                break;
-                            case 7: // RST y*8
-                                break;
+                        switch (context.q) {
+                        case 0: // INC rp[p]
+                            break;
+                        case 1: // DEC rp[p]
+                            break;
                         }
                         break;
+                    case 4: // INC r[y]
+                        break;
+                    case 5: // DEC r[y]
+                        break;
+                    case 6: // LD r[y], n
+                        break;
+                    case 7:
+                        switch (context.y) {
+                        case 0: // RLCA
+                            break;
+                        case 1: // RRCA
+                            break;
+                        case 2: // RLA
+                            break;
+                        case 3: // RRA
+                            break;
+                        case 4: // DAA
+                            break;
+                        case 5: // CPL
+                            break;
+                        case 6: // SCF
+                            break;
+                        case 7: // CCF
+                            break;
+                        }
+                        break;
+                    }
+                    break;
+                case 1:
+                    if (context.z == 6 && context.y == 6) {
+                        // HALT (TODO)
+                    } else {
+                        context.cycles += 4;
+                        self.tables.r[context.y].write.apply(context, [self.tables.r[context.z].read.apply(context)]);
+                    }
+                    break;
+                case 2: // ALU instructions
+                    context.cycles += self.tables.cycles.alu;
+                    self.tables.alu[context.y].apply(context, [self.tables.r[context.z].read.apply(context)]);
+                    break;
+                case 3:
+                    switch (context.z) {
+                    case 0: // RET cc[y]
+                        break;
+                    case 1:
+                        if (context.q == 0) { // POP rp2[p]
+                        } else {
+                            switch (context.p) {
+                            case 0: // RET
+                                break;
+                            case 1: // EXX
+                                context.cycles += 4;
+                                r.exx();
+                                break;
+                            case 2: // JP HL
+                                break;
+                            case 3: // LD SP, HL
+                                break;
+                            }
+                        }
+                        break;
+                    case 2: // JP cc[y], nn
+                        break;
+                    case 3:
+                        switch (context.y) {
+                        case 0: // JP nn
+                            break;
+                        case 1: // (CB prefixed opcodes)
+                            break;
+                        case 2: // OUT (n), A
+                            break;
+                        case 3: // IN A, (n)
+                            break;
+                        case 4: // EX (SP), HL
+                            context.cycles += 19;
+                            r.exDerefSPHL();
+                            break;
+                        case 5: // EX DE, HL
+                            context.cycles += 4;
+                            r.exDEHL();
+                            break;
+                        case 6: // DI
+                            break;
+                        case 7: // EI
+                            break;
+                        }
+                        break;
+                    case 4: // CALL cc[y], nn
+                        context.cycles += 10;
+                        if (self.tables.cc[context.y] == 1) {
+                            context.cycles += 7;
+                            push(r.PC + 3);
+                            r.PC = context.nn;
+                        }
+                        break;
+                    case 5:
+                        if (context.q == 0) { // PUSH rp2[p]
+                        } else {
+                            switch (context.p) {
+                            case 0: // CALL nn
+                                context.cycles += 17;
+                                push(r.PC + 3);
+                                r.PC = context.nn;
+                                break;
+                            case 1: // (DD prefixed opcodes)
+                                break;
+                            case 2: // (ED prefixed opcodes)
+                                break;
+                            case 3: // (FD prefixed opcodes)
+                                break;
+                            }
+                        }
+                        break;
+                    case 6: // alu[y] n
+                        context.cycles += self.tables.cycles.alu;
+                        context.cycles += 3; // Cost of n lookup
+                        self.tables.alu[context.y].apply(context, [context.n]);
+                        break;
+                    case 7: // RST y*8
+                        context.cycles += 11;
+                        r.PC = context.y * 8;
+                        break;
+                    }
+                    break;
+                }
+                cycles -= context.cycles;
+                if (context.cycles == 0) { // Unimplemented opcode, decrememt to avoid an infinite loop
+                    cycles--;
                 }
             }
             return cycles;
