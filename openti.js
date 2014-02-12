@@ -19,7 +19,8 @@
                 set: function(val) {
                     this.val = val;
                     this.val &= 0xFF;
-                }
+                },
+                configurable: true
             });
             return object;
         };
@@ -31,7 +32,8 @@
                 set: function(val) {
                     this.val = val;
                     this.val &= 0xFFFF;
-                }
+                },
+                configurable: true
             });
             return object;
         };
@@ -74,7 +76,8 @@
                     },
                     set: function(val) {
                         reg = val & 0xFFFF;
-                    }
+                    },
+                    configurable: true
                 });
                 Object.defineProperty(self, low, {
                     get: function() {
@@ -83,7 +86,8 @@
                     set: function(val) {
                         reg &= ~0xFF;
                         reg |= (val & 0xFF);
-                    }
+                    },
+                    configurable: true
                 });
                 Object.defineProperty(self, high, {
                     get: function() {
@@ -92,7 +96,8 @@
                     set: function(val) {
                         reg &= ~0xFF00;
                         reg |= ((val & 0xFF) << 8);
-                    }
+                    },
+                    configurable: true
                 });
             };
             function reg16(name) {
@@ -103,7 +108,8 @@
                     },
                     set: function(val) {
                         reg = val & 0xFFFF;
-                    }
+                    },
+                    configurable: true
                 });
             }
             // TODO: IXH/IXL/IYH/IYL
@@ -122,12 +128,13 @@
             function flagdef(name, bit) {
                 Object.defineProperty(self.flags, name, {
                     get: function() {
-                        return (self.AF & (1 << bit));
+                        return (self.AF & (1 << bit)) >>> bit;
                     },
                     set: function(val) {
-                        if (val == 1) self.AF |=  (1 << bit);
-                        else          self.AF &= ~(1 << bit);
-                    }
+                        if ((val & 1) == 1) self.AF |=  (1 << bit);
+                        else                self.AF &= ~(1 << bit);
+                    },
+                    configurable: true
                 });
             };
             flagdef('S', 7);
@@ -140,8 +147,13 @@
                 if (!unaffected) unaffected = '';
                 if (unaffected.indexOf('S') == -1)
                     self.flags.S = (self.A & 0x80) == 0x80 ? 1 : 0;
-                if (unaffected.indexOf('Z') == -1)
-                    self.flags.Z = newValue & 1;
+                if (unaffected.indexOf('Z') == -1) {
+                    if (newValue == 0) {
+                        self.flags.Z = 1;
+                    } else {
+                        self.flags.Z = 0;
+                    }
+                }
                 // TODO: Half carry
                 if (unaffected.indexOf('P') == -1) {
                     if (parity) {
@@ -350,10 +362,9 @@
                     q: (opcode & 0x08) >> 3
                 };
                 // Fancy decoding
-                Object.defineProperty(context, 'd', { get: function() { return sign8bit(self.readMemory(r.PC++)); }
-                });
-                Object.defineProperty(context, 'n', { get: function() { return self.readMemory(r.PC++); } });
-                Object.defineProperty(context, 'nn', { get: function() { var v = readWord(r.PC); r.PC += 2; return v; } });
+                Object.defineProperty(context, 'd', { get: function() { return sign8bit(self.readMemory(r.PC++)); }, configurable: true });
+                Object.defineProperty(context, 'n', { get: function() { return self.readMemory(r.PC++); }, configurable: true });
+                Object.defineProperty(context, 'nn', { get: function() { var v = readWord(r.PC); r.PC += 2; return v; }, configurable: true });
 
                 var push = function(v) {
                     r.SP = r.SP - 2;
