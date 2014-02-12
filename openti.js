@@ -35,6 +35,13 @@
             });
             return object;
         };
+        function sign8bit(a) {
+            if (a > 0x80) {
+                return -(0x100 - a);
+            } else {
+                return a;
+            }
+        };
         function countSetBits(value) {
             // Used to set the P/V flag under some conditions
             // There are some algorithms that do this faster, but we're already using JavaScript
@@ -343,7 +350,8 @@
                     q: (opcode & 0x08) >> 3
                 };
                 // Fancy decoding
-                Object.defineProperty(context, 'd', { get: function() { return self.readMemory(r.PC++); } });
+                Object.defineProperty(context, 'd', { get: function() { return sign8bit(self.readMemory(r.PC++)); }
+                });
                 Object.defineProperty(context, 'n', { get: function() { return self.readMemory(r.PC++); } });
                 Object.defineProperty(context, 'nn', { get: function() { var v = readWord(r.PC); r.PC += 2; return v; } });
 
@@ -374,7 +382,6 @@
                         case 3: // JR d
                             context.cycles += 12;
                             var target = context.d;
-                            target -= 0x80;
                             r.PC += target;
                             break;
                         case 4:
