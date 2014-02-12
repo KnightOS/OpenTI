@@ -378,6 +378,13 @@
                             r.exAF();
                             break;
                         case 2: // DJNZ d
+                            context.cycles += 8;
+                            var target = context.d;
+                            r.B--;
+                            if (r.B != 0) {
+                                context.cycles += 5;
+                                r.PC += target;
+                            }
                             break;
                         case 3: // JR d
                             context.cycles += 12;
