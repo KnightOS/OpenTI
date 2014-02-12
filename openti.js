@@ -282,14 +282,14 @@
                     },
                     function(v) { // OR A, v
                         var old = re.A;
-                        re.A |= value;
+                        re.A |= v;
                         updateFlags(re.A, old);
                         re.flags.C = 0; re.flags.N = 0; re.flags.H = 0;
                     },
                     function(v) { // CP A, v
                         var old = re.A;
                         var a = (re.A - v) & 0xFF;
-                        updateFlags(a, old, true);
+                        updateFlags(old, a, true);
                     }
                 ],
                 rot: [ // TODO

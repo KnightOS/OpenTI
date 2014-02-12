@@ -50,6 +50,43 @@ var tests = {
         test.stage([ 0x90 /* SUB A, B */ ], { A: 20, B: 10 });
         test.execute();
         test.assert({ A: 10 }, { Z: 0, C: 0 }, 4);
+    },
+    'SBC A, r': function(test) {
+        test.stage([ 0x98 /* SBC A, B */ ], { A: 20, B: 10 }, { C: 0 });
+        test.execute();
+        test.assert({ A: 10 }, { Z: 0, C: 0 }, 4);
+
+        test.stage([ 0x98 /* SBC A, B */ ], { A: 20, B: 10 }, { C: 1 });
+        test.execute();
+        test.assert({ A: 9 }, { Z: 0, C: 0 }, 4);
+
+        test.stage([ 0x98 /* SBC A, B */ ], { A: 1, B: 1 }, { C: 1 });
+        test.execute();
+        test.assert({ A: 0xFF }, { Z: 0, C: 1 }, 4);
+
+        test.stage([ 0x98 /* SBC A, B */ ], { A: 1, B: 1 }, { C: 0 });
+        test.execute();
+        test.assert({ A: 0 }, { Z: 1, C: 0 }, 4);
+    },
+    'AND A, r': function(test) {
+        test.stage([ 0xA0 /* AND A, B */ ], { A: 0xFF, B: 0xF0 });
+        test.execute();
+        test.assert({ A: 0xF0 }, {}, 4);
+    },
+    'XOR A, r': function(test) {
+        test.stage([ 0xA8 /* XOR A, B */ ], { A: 0xFF, B: 0xF0 });
+        test.execute();
+        test.assert({ A: 0x0F }, {}, 4);
+    },
+    'OR A, r': function(test) {
+        test.stage([ 0xB0 /* OR A, B */ ], { A: 0x00, B: 0xF0 });
+        test.execute();
+        test.assert({ A: 0xF0 }, {}, 4);
+    },
+    'CP A, r': function(test) {
+        test.stage([ 0xB8 /* CP B */ ], { A: 0, B: 10 });
+        test.execute();
+        test.assert({ A: 0, B: 10 }, { Z: 0, C: 1 }, 4);
     }
 };
 
