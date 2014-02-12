@@ -217,13 +217,13 @@
                     { read: function() { return re.AF; }, write: function(v) { re.SP = v; } }
                 ],
                 cc: [
-                    { read: function() { return ~re.flags.Z; }, write: function(v) { re.flags.Z = ~v; } },
+                    { read: function() { return re.flags.Z + 1 & 1; }, write: function(v) { re.flags.Z = v + 1 & 1; } },
                     { read: function() { return re.flags.Z; }, write: function(v) { re.flags.Z = v; } },
-                    { read: function() { return ~re.flags.C; }, write: function(v) { re.flags.C = ~v; } },
+                    { read: function() { return re.flags.C + 1 & 1; }, write: function(v) { re.flags.C = v + 1 & 1; } },
                     { read: function() { return re.flags.C; }, write: function(v) { re.flags.C = v; } },
-                    { read: function() { return ~re.flags.PV; }, write: function(v) { re.flags.PV = ~v; } },
+                    { read: function() { return re.flags.PV + 1 & 1; }, write: function(v) { re.flags.PV = v + 1 & 1; } },
                     { read: function() { return re.flags.PV; }, write: function(v) { re.flags.PV = v; } },
-                    { read: function() { return ~re.flags.N; }, write: function(v) { re.flags.N = ~v; } },
+                    { read: function() { return re.flags.N + 1 & 1; }, write: function(v) { re.flags.N = v + 1 & 1; } },
                     { read: function() { return re.flags.N; }, write: function(v) { re.flags.N = v; } }
                 ],
                 alu: [ // Arithmetic functions
@@ -513,10 +513,11 @@
                         break;
                     case 4: // CALL cc[y], nn
                         context.cycles += 10;
-                        if (self.tables.cc[context.y] == 1) {
+                        var target = context.nn;
+                        if (self.tables.cc[context.y].read.apply(context) === 1) {
                             context.cycles += 7;
                             push(r.PC + 3);
-                            r.PC = context.nn;
+                            r.PC = target;
                         }
                         break;
                     case 5:
