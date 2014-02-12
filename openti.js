@@ -363,7 +363,7 @@
                     case 0:
                         switch (context.y) {
                         case 0: // NOP
-                            cycles -= 4;
+                            context.cycles -= 4;
                             break;
                         case 1: // EX AF, AF'
                             context.cycles += 4;
