@@ -44,6 +44,10 @@ The easiest way to contribute is to implement some more instructions. Look aroun
 function to find some to work on - decoding is mostly done, you just have to implement the
 instruction that each comment suggests.
 
+## Testing
+
+I've started working on a simple thing for doing tests. See `test.js`, it's fairly self-explanatory.
+
 ## Licensing
 
 OpenTI is distributed under the [MIT license](https://github.com/KnightSoft/kernel/blob/master/LICENSE).

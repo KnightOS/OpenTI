@@ -2,8 +2,10 @@ var OpenTI = require('./openti.js');
 
 var tests = {
     'ADD A, n': function(test) {
+        // test.stage([ memory contents ], { initial register state }, { initial flag state })
         test.stage([ 0x80 ], { A: 10, B: 20 });
         test.execute();
+        // test.assert({ expected register values }, { expected flag values })
         test.assert({ A: 30, B: 20 }, { Z: 0, C: 0 });
 
         test.stage([ 0x80 ], { A: 0xF0, B: 0x20 });
