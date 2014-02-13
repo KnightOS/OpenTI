@@ -13,14 +13,6 @@ And all the variations on that theme. This is just a library, it's up to you to 
 
 This software is not complete, or even usable. Your help would be great!
 
-## Contributing
-
-Fork the repository and submit a pull request to contribute. You can also check out #knightos on
-irc.freenode.net to talk about development. Please stick to the coding style already in place.
-
-To test your work, start up node.js and require the module. Here's an example of how I might test
-`ADD A, B`:
-
     > var OpenTI = require('./openti.js')
     undefined
     > var calc = new OpenTI.TI83p();
@@ -39,6 +31,11 @@ To test your work, start up node.js and require the module. Here's an example of
     0
     > calc.cpu.registers.flags.C
     0
+
+## Contributing
+
+Fork the repository and submit a pull request to contribute. You can also check out #knightos on
+irc.freenode.net to talk about development. Please stick to the coding style already in place.
 
 The easiest way to contribute is to implement some more instructions. Look around the execute
 function to find some to work on - decoding is mostly done, you just have to implement the
