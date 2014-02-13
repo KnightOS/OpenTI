@@ -59,7 +59,8 @@ To list all tests:
     $ node tests.js --list
 
 To write a test, edit tests.js with your test, it should be pretty straightforward. The goal
-is to have a test for every instruction.
+is to have a test for every instruction. You can get a good idea of how things are coming
+along by reading the [Travis log](https://travis-ci.org/KnightOS/OpenTI).
 
 ## Licensing
 
