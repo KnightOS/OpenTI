@@ -390,27 +390,27 @@
                             break;
                         case 2: // DJNZ d
                             context.cycles += 8;
-                            var target = context.d;
+                            var d = context.d;
                             r.B--;
                             if (r.B != 0) {
                                 context.cycles += 5;
-                                r.PC += target;
+                                r.PC += d;
                             }
                             break;
                         case 3: // JR d
                             context.cycles += 12;
-                            var target = context.d;
-                            r.PC += target;
+                            var d = context.d;
+                            r.PC += d;
                             break;
                         case 4:
                         case 5:
                         case 6:
                         case 7: // JR cc[y-4], d
                             context.cycles += 7;
-                            var target = context.d;
+                            var d = context.d;
                             if (self.tables.cc[context.y - 4].read.apply(context) == 1) {
                                 context.cycles += 5;
-                                r.PC += target;
+                                r.PC += d;
                             }
                             break;
                         }
@@ -513,13 +513,22 @@
                                 r.exx();
                                 break;
                             case 2: // JP HL
+                                context.cycles += 4;
+                                r.PC = r.HL;
                                 break;
                             case 3: // LD SP, HL
+                                context.cycles += 6;
+                                r.SP = r.HL;
                                 break;
                             }
                         }
                         break;
                     case 2: // JP cc[y], nn
+                        context.cycles += 10;
+                        var nn = context.nn;
+                        if (self.tables.cc[context.y].read.apply(context) === 1) {
+                            r.PC = nn;
+                        }
                         break;
                     case 3:
                         switch (context.y) {
@@ -549,11 +558,11 @@
                         break;
                     case 4: // CALL cc[y], nn
                         context.cycles += 10;
-                        var target = context.nn;
+                        var nn = context.nn;
                         if (self.tables.cc[context.y].read.apply(context) === 1) {
                             context.cycles += 7;
                             push(r.PC);
-                            r.PC = target;
+                            r.PC = nn;
                         }
                         break;
                     case 5:

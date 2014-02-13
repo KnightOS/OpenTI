@@ -259,6 +259,24 @@ var tests = {
         test.stage([ 0xC3, 0x00, 0x10 /* JP 0x1000 */ ]);
         test.execute();
         test.assert({ PC: 0x1000 }, {}, 10);
+    },
+    'JP HL': function(test) {
+        test.stage([ 0xE9 /* JP HL */ ], { HL: 0x1000 });
+        test.execute();
+        test.assert({ PC: 0x1000 }, {}, 4);
+    },
+    'LD SP, HL': function(test) {
+        test.stage([ 0xF9 /* LD SP, HL */ ], { HL: 0x1000 });
+        test.execute();
+        test.assert({ SP: 0x1000 }, {}, 6);
+    },
+    'JP cc, nn': function(test) {
+        test.stage([ 0xCA, 0x00, 0x10 /* JP z, 0x1000 */ ], {}, { Z: 0 });
+        test.execute();
+        test.assert({ PC: 3 }, {}, 10);
+        test.stage([ 0xCA, 0x00, 0x10 /* JP z, 0x1000 */ ], {}, { Z: 1 });
+        test.execute();
+        test.assert({ PC: 0x1000 }, {}, 10);
     }
 };
 
