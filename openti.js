@@ -204,8 +204,8 @@
             return self.readMemory(address) | (self.readMemory(address + 1) << 8);
         };
         function writeWord(address, word) {
-            self.writeMemory(address, word >> 8);
-            self.writeMemory(address + 1, word & 0x00FF);
+            self.writeMemory(address, word & 0x00FF);
+            self.writeMemory(address + 1, word >> 8);
         };
 
         self.tables = (function() {
@@ -488,9 +488,8 @@
                     }
                     break;
                 case 1:
-                    if (context.z == 6 && context.y == 6) {
-                        // HALT (TODO)
-                    } else {
+                    if (context.z == 6 && context.y == 6) { // HALT
+                    } else { // LD r[y], r[z]
                         context.cycles += 4;
                         self.tables.r[context.y].write.apply(context, [self.tables.r[context.z].read.apply(context)]);
                     }
@@ -551,7 +550,7 @@
                         var target = context.nn;
                         if (self.tables.cc[context.y].read.apply(context) === 1) {
                             context.cycles += 7;
-                            push(r.PC + 3);
+                            push(r.PC);
                             r.PC = target;
                         }
                         break;
@@ -561,7 +560,7 @@
                             switch (context.p) {
                             case 0: // CALL nn
                                 context.cycles += 17;
-                                push(r.PC + 3);
+                                push(r.PC + 2);
                                 r.PC = context.nn;
                                 break;
                             case 1: // (DD prefixed opcodes)
@@ -580,6 +579,7 @@
                         break;
                     case 7: // RST y*8
                         context.cycles += 11;
+                        push(r.PC + 2);
                         r.PC = context.y * 8;
                         break;
                     }

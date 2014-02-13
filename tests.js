@@ -108,6 +108,32 @@ var tests = {
         test.execute();
         test.assert({ AF: 0x4321, _af: 0x1234 }, {}, 4);
     },
+    'EXX': function(test) {
+        test.stage([ 0xD9 /* EXX */ ],
+        {
+            BC: 0x20, DE: 0x30, HL: 0x40,
+            _bc: 0x60, _de: 0x70, _hl: 0x80
+        });
+        test.execute();
+        test.assert(
+        {
+            BC: 0x60, DE: 0x70, HL: 0x80,
+            _bc: 0x20, _de: 0x30, _hl: 0x40
+        });
+    },
+    'EX DE, HL': function(test) {
+        test.stage([ 0xEB /* EX DE, HL */ ], { HL: 10, DE: 20 });
+        test.execute();
+        test.assert({ HL: 20, DE: 10 });
+    },
+    'EX (SP), HL': function(test) {
+        test.stage([ 0xE3 /* EX (SP), HL */ ], { HL: 0x1234, SP: 0xD000 });
+        test.calc.mmu.writeMemory(0xD000, 20);
+        test.execute();
+        test.assert({ HL: 20 });
+        test.assert(test.calc.mmu.readMemory(0xD000) == 0x34);
+        test.assert(test.calc.mmu.readMemory(0xD001) == 0x12);
+    },
     'DJNZ d': function(test) {
         test.stage([ 0x10, 0xFE /* DJNZ $ */ ], { B: 10 });
         test.execute();
@@ -141,6 +167,93 @@ var tests = {
         test.stage([ 0x38, 0x08 /* JR c, 10 */ ], {}, { C: 1 });
         test.execute();
         test.assert({ PC: 10 }, {}, 12);
+    },
+    'LD r[y], r[z]': function(test) {
+        test.stage([ 0x78 /* LD A, B */ ], { B: 10 });
+        test.execute();
+        test.assert({ A: 10, B: 10 }, {}, 4);
+        test.stage([ 0x47 /* LD B, A */ ], { A: 10 });
+        test.execute();
+        test.assert({ A: 10, B: 10 }, {}, 4);
+        test.stage([ 0x53 /* LD D, E */ ], { E: 10 });
+        test.execute();
+        test.assert({ D: 10, E: 10 }, {}, 4);
+        test.stage([ 0x7E /* LD A, (HL) */ ], { HL: 0xC000 });
+        test.calc.mmu.writeMemory(0xC000, 10);
+        test.execute();
+        test.assert({ A: 10 }, {}, 7);
+    },
+    'CALL nn': function(test) {
+        test.stage([ 0xCD, 0x00, 0x10 /* CALL 0x1000 */ ]);
+        test.execute();
+        test.assert({ PC: 0x1000, SP: 0xFFFE }, {}, 17);
+        test.test(0x03, test.calc.mmu.readMemory(0xFFFE));
+        test.test(0x00, test.calc.mmu.readMemory(0xFFFF));
+    },
+    'CALL cc, nn': function(test) {
+        test.stage([ 0xCC, 0x00, 0x10 /* CALL z, 0x1000 */ ], {}, { Z: 1 });
+        test.execute();
+        test.assert({ PC: 0x1000, SP: 0xFFFE }, 17);
+        test.test(0x03, test.calc.mmu.readMemory(0xFFFE));
+        test.test(0x00, test.calc.mmu.readMemory(0xFFFF));
+        test.stage([ 0xCC, 0x00, 0x10 /* CALL z, 0x1000 */ ], {}, { Z: 0 });
+        test.execute();
+        test.assert({ PC: 3, SP: 0 }, {}, 10);
+        test.stage([ 0xDC, 0x00, 0x10 /* CALL c, 0x1000 */ ], {}, { C: 1 });
+        test.execute();
+        test.assert({ PC: 0x1000, SP: 0xFFFE }, 17);
+        test.test(0x03, test.calc.mmu.readMemory(0xFFFE));
+        test.test(0x00, test.calc.mmu.readMemory(0xFFFF));
+        test.stage([ 0xCC, 0x00, 0x10 /* CALL c, 0x1000 */ ], {}, { C: 0 });
+        test.execute();
+        test.assert({ PC: 3, SP: 0 }, {}, 10);
+        test.stage([ 0xC4, 0x00, 0x10 /* CALL nz, 0x1000 */ ], {}, { Z: 0 });
+        test.execute();
+        test.assert({ PC: 0x1000, SP: 0xFFFE }, 17);
+        test.test(0x03, test.calc.mmu.readMemory(0xFFFE));
+        test.test(0x00, test.calc.mmu.readMemory(0xFFFF));
+        test.stage([ 0xC4, 0x00, 0x10 /* CALL nz, 0x1000 */ ], {}, { Z: 1 });
+        test.execute();
+        test.assert({ PC: 3, SP: 0 }, {}, 10);
+        test.stage([ 0xD4, 0x00, 0x10 /* CALL nc, 0x1000 */ ], {}, { C: 0 });
+        test.execute();
+        test.assert({ PC: 0x1000, SP: 0xFFFE }, 17);
+        test.test(0x03, test.calc.mmu.readMemory(0xFFFE));
+        test.test(0x00, test.calc.mmu.readMemory(0xFFFF));
+        test.stage([ 0xD4, 0x00, 0x10 /* CALL nc, 0x1000 */ ], {}, { C: 1 });
+        test.execute();
+        test.assert({ PC: 3, SP: 0 }, {}, 10);
+    },
+    'ADD A, n': function(test) {
+        test.stage([ 0xC6, 0x0A /* ADD A, 10 */ ], { A: 20 });
+        test.execute();
+        test.assert({ A: 30, PC: 2 }, {}, 7);
+    },
+    'RST': function(test) {
+        test.stage([ 0xC7 /* RST 0x00 */ ]);
+        test.execute();
+        test.assert({ PC: 0x00, SP: 0xFFFE }, {}, 11);
+        test.stage([ 0xCF /* RST 0x08 */ ]);
+        test.execute();
+        test.assert({ PC: 0x08, SP: 0xFFFE });
+        test.stage([ 0xD7 /* RST 0x10 */ ]);
+        test.execute();
+        test.assert({ PC: 0x10, SP: 0xFFFE });
+        test.stage([ 0xDF /* RST 0x18 */ ]);
+        test.execute();
+        test.assert({ PC: 0x18, SP: 0xFFFE });
+        test.stage([ 0xE7 /* RST 0x20 */ ]);
+        test.execute();
+        test.assert({ PC: 0x20, SP: 0xFFFE });
+        test.stage([ 0xEF /* RST 0x28 */ ]);
+        test.execute();
+        test.assert({ PC: 0x28, SP: 0xFFFE });
+        test.stage([ 0xF7 /* RST 0x30 */ ]);
+        test.execute();
+        test.assert({ PC: 0x30, SP: 0xFFFE });
+        test.stage([ 0xFF /* RST 0x38 */ ]);
+        test.execute();
+        test.assert({ PC: 0x38, SP: 0xFFFE });
     }
 };
 
@@ -164,7 +277,18 @@ function createTestContext() {
                 }
             }
         },
+        test: function(expected, actual) {
+            if (expected !== actual) {
+                throw new Error('Expected ' + expected + ', was ' + actual);
+            }
+        },
         assert: function(registers, flags, cycles) {
+            if (typeof registers === 'boolean') {
+                if (!registers) {
+                    throw new Error('Assert failed');
+                }
+                return;
+            }
             for (var r in registers) {
                 if (registers[r] != this.calc.cpu.registers[r]) {
                     throw new Error('Expected register ' + r + ' to be ' + registers[r] + ', was actually ' + this.calc.cpu.registers[r]);
