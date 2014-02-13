@@ -46,7 +46,20 @@ instruction that each comment suggests.
 
 ## Testing
 
-I've started working on a simple thing for doing tests. See `test.js`, it's fairly self-explanatory.
+To run all tests:
+
+    $ node tests.js
+
+To run specific tests:
+
+    $ node tests.js "DJNZ d" "XOR A, r" "EX AF, AF'"
+
+To list all tests:
+
+    $ node tests.js --list
+
+To write a test, edit tests.js with your test, it should be pretty straightforward. The goal
+is to have a test for every instruction.
 
 ## Licensing
 
