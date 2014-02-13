@@ -122,7 +122,7 @@
             reg16('IX');
             reg16('IY');
             // Shadow regs
-            var _af = _bc = _de = _hl = 0;
+            self._af = self._bc = self._de = self._hl = 0;
             
             self.flags = {};
             function flagdef(name, bit) {
@@ -175,14 +175,14 @@
 
             self.exx = function() {
                 var temp;
-                temp = self.BC; self.BC = bc_; bc_ = temp;
-                temp = self.HL; self.HL = hl_; hl_ = temp;
-                temp = self.DE; self.DE = de_; de_ = temp;
+                temp = self.BC; self.BC = self._bc; self._bc = temp;
+                temp = self.HL; self.HL = self._hl; self._hl = temp;
+                temp = self.DE; self.DE = self._de; self._de = temp;
             };
 
             self.exAF = function() {
                 var temp;
-                temp = self.AF; self.AF = af_; af_ = temp;
+                temp = self.AF; self.AF = self._af; self._af = temp;
             };
 
             self.exDEHL = function() {
