@@ -23,9 +23,6 @@ var tests = {
         console.log('Executed 100,000 cycles in ' + (end - start) + ' milliseconds.');
         return false;
     },
-    'intentionally_broken': function(test) {
-        throw new Error('intentional');
-    },
     'ADD A, r': function(test) {
         test.stage([ 0x80 /* ADD A, B */ ], { A: 10, B: 20 });
         test.execute();
