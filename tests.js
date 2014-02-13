@@ -247,3 +247,4 @@ if (process.argv.length == 2) {
 }
 console.log(passed.length + ' tests passed.');
 console.log(failed.length + ' tests failed.');
+process.exit(failed.length);
