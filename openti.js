@@ -524,6 +524,8 @@
                     case 3:
                         switch (context.y) {
                         case 0: // JP nn
+                            context.cycles += 10;
+                            r.PC = context.nn;
                             break;
                         case 1: // (CB prefixed opcodes)
                             break;

@@ -254,6 +254,11 @@ var tests = {
         test.stage([ 0xFF /* RST 0x38 */ ]);
         test.execute();
         test.assert({ PC: 0x38, SP: 0xFFFE });
+    },
+    'JP nn': function(test) {
+        test.stage([ 0xC3, 0x00, 0x10 /* JP 0x1000 */ ]);
+        test.execute();
+        test.assert({ PC: 0x1000 }, {}, 10);
     }
 };
 
