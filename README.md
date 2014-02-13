@@ -9,7 +9,8 @@ An emulator for calculators with [KnightOS](https://github.com/KnightSoft/Knight
 * TI-84+ SE
 * TI-84+ CSE
 
-And all the variations on that theme. This is just a library, it's up to you to use it.
+And all the variations on that theme. This is just a library, it's up to you to use it. It runs on
+node.js or in a web browser.
 
 This software is not complete, or even usable. Your help would be great!
 
