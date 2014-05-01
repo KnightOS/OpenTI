@@ -16,10 +16,11 @@ test.assert({ expected register values }, { expected flag values }, { expected c
 
 var tests = {
     'performance': function(test) {
-        var calc = new OpenTI.TI83p();
-        var start = new Date();
+        var calc = new OpenTI.TI83p(),
+            start = new Date(),
+            end;
         calc.execute(100000); // RST 0x38 a bunch of times
-        var end = new Date();
+        end = new Date();
         console.log('Executed 100,000 cycles in ' + (end - start) + ' milliseconds.');
         return false;
     },
@@ -285,17 +286,18 @@ function createTestContext() {
         calc: new OpenTI.TI83p(),
         cycles: 0,
         stage: function(code, registers, flags) {
+            var i,r,f;
             this.reset();
-            for (var i = 0; i < code.length; i++) {
+            for (i = 0; i < code.length; i++) {
                 this.calc.mmu.forceWrite(i, code[i]);
             }
             if (typeof registers !== 'undefined') {
-                for (var r in registers) {
+                for (r in registers) {
                     this.calc.cpu.registers[r] = registers[r];
                 }
             }
             if (typeof flags !== 'undefined') {
-                for (var f in flags) {
+                for (f in flags) {
                     this.calc.cpu.registers.flags[f] = flags[f];
                 }
             }
@@ -306,19 +308,20 @@ function createTestContext() {
             }
         },
         assert: function(registers, flags, cycles) {
+            var r,f;
             if (typeof registers === 'boolean') {
                 if (!registers) {
                     throw new Error('Assert failed');
                 }
                 return;
             }
-            for (var r in registers) {
+            for (r in registers) {
                 if (registers[r] != this.calc.cpu.registers[r]) {
                     throw new Error('Expected register ' + r + ' to be ' + registers[r] + ', was actually ' + this.calc.cpu.registers[r]);
                 }
             }
             if (typeof flags !== 'undefined') {
-                for (var f in flags) {
+                for (f in flags) {
                     if (flags[f] != this.calc.cpu.registers.flags[f]) {
                         throw new Error('Expected flag ' + f + ' to be ' + flags[f] + ', was actually ' + this.calc.cpu.registers.flags[f]);
                     }
@@ -345,19 +348,22 @@ function createTestContext() {
     };
 }
 
-var passed = []; var failed = [];
-var minWidth = 30;
+var passed = [],
+    failed = [],
+    minWidth = 30,
+    test;
 
 function runTest(test) {
-    var context = createTestContext();
-    var length = test.length + 'Testing '.length;
+    var context = createTestContext(),
+        length = test.length + 'Testing '.length,
+        result;
     process.stdout.write('Testing ' + test + ' ');
     while (length < minWidth) {
         process.stdout.write('.');
         length++;
     }
     try {
-        var result = tests[test](context, context.calc);
+        result = tests[test](context, context.calc);
         if (typeof result === 'undefined' || result) {
             console.log('PASS');
         }
@@ -374,13 +380,13 @@ function runTest(test) {
 }
 
 if (process.argv.length == 2) {
-    for (var test in tests) {
+    for (test in tests) {
         runTest(test);
     }
 } else {
     process.argv.slice(2).forEach(function(test) {
         if (test === '--list') {
-            for (var test in tests) {
+            for (test in tests) {
                 console.log(test);
             }
             process.exit(0);
