@@ -23,7 +23,7 @@
                 configurable: true
             });
             return object;
-        };
+        }
         function uint16(object, name) {
             Object.defineProperty(object, name, {
                 get: function() {
@@ -36,21 +36,22 @@
                 configurable: true
             });
             return object;
-        };
+        }
         function sign8bit(a) {
             if (a > 0x80) {
                 return -(0x100 - a);
             } else {
                 return a;
             }
-        };
+        }
         function countSetBits(value) {
             // Used to set the P/V flag under some conditions
             // There are some algorithms that do this faster, but we're already using JavaScript
             // so performance isn't a huge concern, plus this doesn't happen often and it's only
             // 8 bits.
-            var count = 0;
-            for (var i = 0; i < 8; i++) {
+            var count = 0,
+                i;
+            for (i = 0; i < 8; i++) {
                 if (value & (1 << i) > 0) {
                     count++;
                 }
@@ -67,9 +68,9 @@
         self.registers = (function() {
             var self = this;
             function reg8pair(name) {
-                var high = name.substr(0, 1);
-                var low = name.substr(1);
-                var reg = 0;
+                var high = name.substr(0, 1),
+                    low = name.substr(1),
+                    reg = 0;
                 Object.defineProperty(self, name, {
                     get: function() {
                         return reg;
@@ -99,7 +100,7 @@
                     },
                     configurable: true
                 });
-            };
+            }
             function reg16(name) {
                 var reg = 0;
                 Object.defineProperty(self, name, {
@@ -136,7 +137,7 @@
                     },
                     configurable: true
                 });
-            };
+            }
             flagdef('S', 7);
             flagdef('Z', 6);
             flagdef('H', 4);
@@ -148,7 +149,7 @@
                 if (unaffected.indexOf('S') == -1)
                     self.flags.S = (self.A & 0x80) == 0x80 ? 1 : 0;
                 if (unaffected.indexOf('Z') == -1) {
-                    if (newValue == 0) {
+                    if (newValue === 0) {
                         self.flags.Z = 1;
                     } else {
                         self.flags.Z = 0;
@@ -174,25 +175,21 @@
             };
 
             self.exx = function() {
-                var temp;
-                temp = self.BC; self.BC = self._bc; self._bc = temp;
-                temp = self.HL; self.HL = self._hl; self._hl = temp;
-                temp = self.DE; self.DE = self._de; self._de = temp;
+                self.BC = [self._bc, self._bc = self.BC][0];
+                self.HL = [self._hl, self._hl = self.HL][0];
+                self.DE = [self._de, self._de = self.DE][0];
             };
 
             self.exAF = function() {
-                var temp;
-                temp = self.AF; self.AF = self._af; self._af = temp;
+                self.AF = [self._af, self._af = self.AF][0];
             };
 
             self.exDEHL = function() {
-                var temp;
-                temp = self.DE; self.DE = self.HL; self.HL = temp;
+                self.DE = [self.HL, self.HL = self.DE][0];
             };
 
             self.exDerefSPHL = function() {
-                var temp;
-                temp = self.HL;
+                var temp  = self.HL;
                 self.HL = readWord(self.SP);
                 writeWord(self.SP, temp);
             };
@@ -202,16 +199,16 @@
 
         function readWord(address) {
             return self.readMemory(address) | (self.readMemory(address + 1) << 8);
-        };
+        }
         function writeWord(address, word) {
             self.writeMemory(address, word & 0x00FF);
             self.writeMemory(address + 1, word >> 8);
-        };
+        }
 
         self.tables = (function() {
             // Assume x, y, z, p, q, d, n, nn, and cycles are defined in the `this` context
-            var re = self.registers;
-            var tables = {
+            var re = self.registers,
+                tables = {
                 cycles: { r: 0, rp: 0, rp2: 0, alu: 4 }, // Base cycles used by each group, some conditions add more
                 r: [
                     { read: function() { return re.B; }, write: function(v) { re.B = v; } },
@@ -347,12 +344,32 @@
         })();
 
         self.execute = function(cycles) {
+            var push = function(v) {
+                    r.SP = r.SP - 2;
+                    writeWord(r.SP, v);
+                },
+                pop = function() {
+                    var v = readWord(r.SP);
+                    r.SP = r.SP + 2;
+                    return v;
+                },
+                _d_get = function() {
+                    return sign8bit(self.readMemory(r.PC++));
+                },
+                _n_get = function() {
+                    return self.readMemory(r.PC++);
+                },
+                _nn_get = function() {
+                    var v = readWord(r.PC);
+                    r.PC += 2;
+                    return v;
+                };
             while (cycles > 0) {
-                var r = self.registers;
-                var instruction = self.readMemory(r.PC++);
-                var opcode = instruction;
+                var r = self.registers,
+                    instruction = self.readMemory(r.PC++),
+                    opcode = instruction,
                 // Decode
-                var context = {
+                    context = {
                     cycles: 0,
                     opcode: opcode,
                     x: (opcode & 0xC0) >> 6,
@@ -362,19 +379,12 @@
                     q: (opcode & 0x08) >> 3
                 };
                 // Fancy decoding
-                Object.defineProperty(context, 'd', { get: function() { return sign8bit(self.readMemory(r.PC++)); }, configurable: true });
-                Object.defineProperty(context, 'n', { get: function() { return self.readMemory(r.PC++); }, configurable: true });
-                Object.defineProperty(context, 'nn', { get: function() { var v = readWord(r.PC); r.PC += 2; return v; }, configurable: true });
+                Object.defineProperty(context, 'd', { get: _d_get, configurable: true });
+                Object.defineProperty(context, 'n', { get: _n_get, configurable: true });
+                Object.defineProperty(context, 'nn', { get: _nn_get, configurable: true });
 
-                var push = function(v) {
-                    r.SP = r.SP - 2;
-                    writeWord(r.SP, v);
-                };
-                var pop = function() {
-                    var v = readWord(r.SP);
-                    r.SP = r.SP + 2;
-                    return v;
-                };
+                var d,
+                    nn;
                 // Execute
                 switch (context.x) {
                 case 0:
@@ -390,16 +400,16 @@
                             break;
                         case 2: // DJNZ d
                             context.cycles += 8;
-                            var d = context.d;
+                            d = context.d;
                             r.B--;
-                            if (r.B != 0) {
+                            if (r.B !== 0) {
                                 context.cycles += 5;
                                 r.PC += d;
                             }
                             break;
                         case 3: // JR d
                             context.cycles += 12;
-                            var d = context.d;
+                            d = context.d;
                             r.PC += d;
                             break;
                         case 4:
@@ -407,7 +417,7 @@
                         case 6:
                         case 7: // JR cc[y-4], d
                             context.cycles += 7;
-                            var d = context.d;
+                            d = context.d;
                             if (self.tables.cc[context.y - 4].read.apply(context) == 1) {
                                 context.cycles += 5;
                                 r.PC += d;
@@ -503,7 +513,7 @@
                     case 0: // RET cc[y]
                         break;
                     case 1:
-                        if (context.q == 0) { // POP rp2[p]
+                        if (context.q === 0) { // POP rp2[p]
                         } else {
                             switch (context.p) {
                             case 0: // RET
@@ -525,7 +535,7 @@
                         break;
                     case 2: // JP cc[y], nn
                         context.cycles += 10;
-                        var nn = context.nn;
+                        nn = context.nn;
                         if (self.tables.cc[context.y].read.apply(context) === 1) {
                             r.PC = nn;
                         }
@@ -558,7 +568,7 @@
                         break;
                     case 4: // CALL cc[y], nn
                         context.cycles += 10;
-                        var nn = context.nn;
+                        nn = context.nn;
                         if (self.tables.cc[context.y].read.apply(context) === 1) {
                             context.cycles += 7;
                             push(r.PC);
@@ -566,7 +576,7 @@
                         }
                         break;
                     case 5:
-                        if (context.q == 0) { // PUSH rp2[p]
+                        if (context.q === 0) { // PUSH rp2[p]
                         } else {
                             switch (context.p) {
                             case 0: // CALL nn
@@ -597,7 +607,7 @@
                     break;
                 }
                 cycles -= context.cycles;
-                if (context.cycles == 0) { // Unimplemented opcode, decrememt to avoid an infinite loop
+                if (context.cycles === 0) { // Unimplemented opcode, decrememt to avoid an infinite loop
                     cycles--;
                 }
             }
@@ -608,7 +618,8 @@
     }
 
     function MMU(flashPages, ramPages) {
-        var self = this;
+        var self = this,
+            i;
         self.flashUnlocked = false;
         self.flash = [];
         self.ram = [];
@@ -619,17 +630,17 @@
             { flash: false, page: 0 }
         ];
 
-        for (var i = 0; i < flashPages * 0x4000; i++) {
+        for (i = 0; i < flashPages * 0x4000; i++) {
             self.flash[i] = 0xFF;
         }
-        for (var i = 0; i < ramPages * 0x4000; i++) {
+        for (i = 0; i < ramPages * 0x4000; i++) {
             self.ram[i] = 0;
         }
 
         self.readMemory = function(address) {
             address &= 0xFFFF;
-            var bank = self.banks[Math.floor(address / 0x4000)];
-            var mappedAddress = (address % 0x4000) + (bank.page * 0x4000);
+            var bank = self.banks[Math.floor(address / 0x4000)],
+                mappedAddress = (address % 0x4000) + (bank.page * 0x4000);
             if (bank.flash) {
                 return self.flash[mappedAddress];
             } else {
@@ -640,8 +651,8 @@
         self.writeMemory = function(address, value) {
             value &= 0xFF;
             address &= 0xFFFF;
-            var bank = self.banks[Math.floor(address / 0x4000)];
-            var mappedAddress = (address % 0x4000) + (bank.page * 0x4000);
+            var bank = self.banks[Math.floor(address / 0x4000)],
+                mappedAddress = (address % 0x4000) + (bank.page * 0x4000);
             if (bank.flash) {
                 // TODO: Flash stuff
             } else {
@@ -652,8 +663,8 @@
         self.forceWrite = function(address, value) {
             value &= 0xFF;
             address &= 0xFFFF;
-            var bank = self.banks[Math.floor(address / 0x4000)];
-            var mappedAddress = (address % 0x4000) + (bank.page * 0x4000);
+            var bank = self.banks[Math.floor(address / 0x4000)],
+                mappedAddress = (address % 0x4000) + (bank.page * 0x4000);
             if (bank.flash) {
                 self.flash[mappedAddress] = value;
             } else {
@@ -662,10 +673,13 @@
         };
 
         return self;
-    };
+    }
 
     function ASIC(clocks, usb) {
-        var self = this;
+        var self = this,
+            i,
+            _read = function(asic) { return -1; },
+            _write = function(asic, value) { };
         self.privledgedPages = [];
         self.cpu = new z80();
         self.mmu = new MMU(0x20, 3);
@@ -673,10 +687,10 @@
         self.cpu.writeMemory = self.mmu.writeMemory;
 
         self.hardware = [];
-        for (var i = 0; i < 0x100; i++) {
+        for (i = 0; i < 0x100; i++) {
             self.hardware[i] = {
-                read: function(asic) { return -1; },
-                write: function(asic, value) { },
+                read: _read,
+                write: _write,
                 isProtected: false
             };
         }
@@ -691,7 +705,7 @@
         };
 
         return self;
-    };
+    }
 
     function TI83p() {
         var self = this;
@@ -703,7 +717,7 @@
         self.execute = self.cpu.execute;
 
         return self;
-    };
+    }
 
     exports.z80 = z80;
     exports.ASIC = ASIC;
