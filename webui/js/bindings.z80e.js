@@ -66,17 +66,29 @@ var OpenTI = (function() {
 
 		this.registers = CPU.Registers.fromPointer(int_point + 3072);
 
-		Wrap.UInt8(this, "IFF1", int_point + 3076, 1, 0);
-		Wrap.UInt8(this, "IFF2", int_point + 3076, 2, 1);
-		Wrap.UInt8(this, "int_mode", int_point + 3076, 12, 2);
-		Wrap.UInt8(this, "IFF_wait", int_point + 3076, 16, 4);
-		Wrap.UInt8(this, "halted", int_point + 3076, 32, 5);
-		Wrap.UInt8(this, "INT_pending", int_point + 3076, 64, 6);
+		Wrap.UInt8(this, "IFF1", int_point + 3098, 1, 0);
+		Wrap.UInt8(this, "IFF2", int_point + 3098, 2, 1);
+		Wrap.UInt8(this, "int_mode", int_point + 3098, 12, 2);
+		Wrap.UInt8(this, "IFF_wait", int_point + 3098, 16, 4);
+		Wrap.UInt8(this, "halted", int_point + 3098, 32, 5);
+		Wrap.UInt8(this, "INT_pending", int_point + 3098, 64, 6);
 
-		Wrap.UInt8(this, "bus", int_point + 3077);
-		Wrap.UInt8(this, "prefix", int_point + 3078);
+		Wrap.UInt8(this, "bus", int_point + 3099);
+		Wrap.UInt8(this, "prefix", int_point + 3100);
 
-		this.memory = dereferencePointer(int_point + 3079);
+		this.memory = dereferencePointer(int_point + 3101);
+	}
+
+	CPU.prototype.execute = function(cycles) {
+		if (cycles == undefined) {
+			cycles = -1;
+		}
+
+		return Module._cpu_execute(this.internalPointer, cycles);
+	}
+
+	CPU.prototype.raiseInterrupt = function() {
+		Module._cpu_raise_interrupt(this.internalPointer);
 	}
 
 	CPU.Registers = function(pointer) {
@@ -92,6 +104,53 @@ var OpenTI = (function() {
 
 	CPU.Registers.prototype.initWithInternalPointer = function(int_point) {
 		this.internalPointer = int_point;
+
+		Wrap.UInt16(this, "AF", int_point);
+		Wrap.UInt8(this, "A", int_point);
+		Wrap.UInt8(this, "F", int_point + 1);
+
+		this.flags = {};
+
+		Wrap.UInt8(this.flags, "S", int_point + 1, 1, 0);
+		Wrap.UInt8(this.flags, "Z", int_point + 1, 2, 1);
+
+		Wrap.UInt8(this.flags, "H", int_point + 1, 8, 3);
+
+		Wrap.UInt8(this.flags, "PV", int_point + 1, 32, 5);
+		Wrap.UInt8(this.flags, "N", int_point + 1, 64, 6);
+		Wrap.UInt8(this.flags, "C", int_point + 1, 128, 7);
+
+		Wrap.UInt16(this, "BC", int_point + 2);
+		Wrap.UInt8(this, "B", int_point + 2);
+		Wrap.UInt8(this, "C", int_point + 3);
+
+		Wrap.UInt16(this, "DE", int_point + 4);
+		Wrap.UInt8(this, "D", int_point + 4);
+		Wrap.UInt8(this, "E", int_point + 5);
+
+		Wrap.UInt16(this, "HL", int_point + 6);
+		Wrap.UInt8(this, "H", int_point + 6);
+		Wrap.UInt8(this, "L", int_point + 7);
+
+		Wrap.UInt16(this, "_AF", int_point + 8);
+		Wrap.UInt16(this, "_BC", int_point + 10);
+		Wrap.UInt16(this, "_DE", int_point + 12);
+		Wrap.UInt16(this, "_HL", int_point + 14);
+		Wrap.UInt16(this, "PC", int_point + 16);
+		Wrap.UInt16(this, "SP", int_point + 18);
+
+		Wrap.UInt16(this, "IX", int_point + 20);
+		Wrap.UInt8(this, "IXH", int_point + 20);
+		Wrap.UInt8(this, "IXL", int_point + 21);
+
+		Wrap.UInt16(this, "IY", int_point + 22);
+		Wrap.UInt8(this, "IYH", int_point + 22);
+		Wrap.UInt8(this, "IYL", int_point + 23);
+
+		Wrap.UInt8(this, "I", int_point + 24);
+		Wrap.UInt8(this, "R", int_point + 25);
+
+		// length: 26
 	}
 
 	function MMU(type) {
@@ -212,7 +271,10 @@ var OpenTI = (function() {
 			low: 1,
 			good: 2
 		},
-		ti: {
+
+		CPU: CPU,
+
+		TI: {
 			Asic: Asic,
 			MMU: MMU
 		}
@@ -220,7 +282,3 @@ var OpenTI = (function() {
 
 	return OpenTI;
 })()
-
-if (module != undefined) {
-	module.exports = OpenTI;
-}
