@@ -1,4 +1,4 @@
-# OpenTI
+# OpenTI (JS core)
 
 **Note**: This is stalled while the core is [rewritten in C](https://github.com/KnightOS/z80e).
 
