@@ -1,6 +1,3 @@
-# OpenTI
+# OpenTI (z80e core)
 
-This is the repo for the JS-based Z80 (+ TI) emulator. There's two cores for the emulator:
-
-- JS core: This one is written in pure JavaScript, but is on hold right now.
-- C core: This core is a JS binding of [z80e](https://github.com/KnightOS/z80e), a C-based TI emulator.
+This is a binding of the [z80e](https://github.com/KnightOS/z80e), but compiled into JavaScript using emscripten. To make it easy to use, a OpenTI-like wrapper will be written around it. This will also be the holding place of the HTML-based TI emulator (and maybe even TI IDE, later!).
