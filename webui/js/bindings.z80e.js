@@ -42,7 +42,7 @@ var OpenTI = (function() {
 		var table = Module["dynCall_"+type];
 		Object.defineProperty(obj, name, {
 			get: function() {
-				var current = Module.HEAPU32[location / 4];
+/*				var current = Module.HEAPU32[location / 4];
 				if (isJSFunction(current)) {
 					return Runtime.functionPointers[(current - 2) / 2];
 				} else {
@@ -55,9 +55,10 @@ var OpenTI = (function() {
 					tmp._wrapPointer = current;
 					tmp._wrapUsage = 10000000000; // should be enough
 					return tmp;
-				}
+				}*/
+				return Runtime.getFuncWrapper(Module.HEAPU32[location / 4], type);
 			}, set: function(value) {
-				var current = Module.HEAPU32[location / 4];
+/*				var current = Module.HEAPU32[location / 4];
 				if (current && isJSFunction(current)) {
 					var func = Runtime.functionPointers[(current - 2) / 2];
 					func._wrapUsage--;
@@ -73,7 +74,9 @@ var OpenTI = (function() {
 				}
 
 
-				Module.HEAPU32[location / 4] = value._wrapPointer;
+				Module.HEAPU32[location / 4] = value._wrapPointer;*/
+
+				throw new Error("Setting functions is disabled, as the code is very unstable. (See KnightOS/OpenTI#2)");
 			}
 		});
 	}
