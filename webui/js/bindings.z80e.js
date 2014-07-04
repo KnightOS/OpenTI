@@ -15,9 +15,6 @@ var OpenTI = (function() {
 		Wrap[i] = function(obj, name, location, bit, offset) {
 			location /= Divisor;
 
-			console.log("Wrapping on", obj, "name", name, "at mem location", location * Divisor);
-			console.log("Divided by", Divisor, "gets", location);
-
 			if (bit == undefined) {
 				bit = ~0;
 				offset = 0;
@@ -34,6 +31,41 @@ var OpenTI = (function() {
 				}
 			});
 		}
+	}
+
+	function isJSFunction(func_pointer) {
+		return func_pointer != 0 && (func_pointer % 2 == 0);
+	}
+
+	Wrap.Function = function(obj, name, type, location) {
+		var table = Module["dynCall_"+type];
+		Object.defineProperty(obj, name, {
+			get: function() {
+				return function() {
+					var val = Module.HEAPU32[location / 4];
+					var argarr = Array.prototype.slice.apply(arguments);
+					argarr.unshift(val);
+					return table.apply(this, argarr);
+				}
+			}, set: function(value) {
+				var current = Module.HEAPU32[location / 4];
+				if (isJSFunction(current)) {
+					var func = Runtime.functionPointers[(current - 2) / 2];
+					func._wrapUsage--;
+					if (func._wrapUsage < 1)
+						Runtime.removeFunction(func._wrapPointer);
+				}
+
+				if (!value._wrapUsage || value._wrapUsage < 1) {
+					value._wrapPointer = Runtime.addFunction(value);
+					value._wrapUsage = 1;
+				} else {
+					value._wrapUsage++;
+				}
+
+				Module.HEAPU32[location / 4] = value._wrapPointer;
+			}
+		});
 	}
 
 	function dereferencePointer(pointer) {
@@ -60,8 +92,9 @@ var OpenTI = (function() {
 	CPU.prototype.initWithInternalPointer = function(int_point) {
 		this.internalPointer = int_point;
 
+		this.devices = [];
 		for(var i = 0; i < 0x100; i++) {
-
+			this.devices.push(CPU.Z80IODevice.fromPointer(int_point + (12 * i)));
 		}
 
 		this.registers = CPU.Registers.fromPointer(int_point + 3072);
@@ -151,6 +184,30 @@ var OpenTI = (function() {
 		Wrap.UInt8(this, "R", int_point + 25);
 
 		// length: 26
+	}
+
+	CPU.Z80IODevice = function() {
+		if(arguments.length != 0)
+			return this;
+
+		this.initWithInternalPointer(Module._malloc(12));
+	}
+
+	CPU.Z80IODevice.fromPointer = function(pointer) {
+		var cpu = new CPU.Z80IODevice(false);
+		cpu.initWithInternalPointer(pointer);
+		return cpu;
+	}
+
+	CPU.Z80IODevice.prototype.toPointer = function() {
+		return this.internalPointer;
+	}
+
+	CPU.Z80IODevice.prototype.initWithInternalPointer = function(int_point) {
+		this.internalPointer = int_point;
+		Wrap.UInt32(this, "device", int_point);
+		Wrap.Function(this, "read", "iv", int_point + 4);
+		Wrap.Function(this, "write", "vii", int_point + 8);
 	}
 
 	function MMU(type) {
