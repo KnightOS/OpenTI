@@ -219,7 +219,7 @@ var OpenTI = (function() {
 	CPU.Z80IODevice.prototype.initWithInternalPointer = function(int_point) {
 		this.internalPointer = int_point;
 		Wrap.UInt32(this, "device", int_point);
-		Wrap.Function(this, "read", "iv", int_point + 4);
+		Wrap.Function(this, "read", "ii", int_point + 4);
 		Wrap.Function(this, "write", "vii", int_point + 8);
 	}
 
