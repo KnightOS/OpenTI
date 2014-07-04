@@ -34,22 +34,31 @@ var OpenTI = (function() {
 	}
 
 	function isJSFunction(func_pointer) {
-		return func_pointer != 0 && (func_pointer % 2 == 0);
+		console.log(func_pointer, func_pointer % 2);
+		return func_pointer != 0 && (func_pointer % 2 == 0) && (func_pointer - 2) / 2 < Runtime.functionPointers.length;
 	}
 
 	Wrap.Function = function(obj, name, type, location) {
 		var table = Module["dynCall_"+type];
 		Object.defineProperty(obj, name, {
 			get: function() {
-				return function() {
-					var val = Module.HEAPU32[location / 4];
-					var argarr = Array.prototype.slice.apply(arguments);
-					argarr.unshift(val);
-					return table.apply(this, argarr);
+				var current = Module.HEAPU32[location / 4];
+				if (isJSFunction(current)) {
+					return Runtime.functionPointers[(current - 2) / 2];
+				} else {
+					var tmp = function() {
+						var val = Module.HEAPU32[location / 4];
+						var argarr = Array.prototype.slice.apply(arguments);
+						argarr.unshift(val);
+						return table.apply(this, argarr);
+					}
+					tmp._wrapPointer = current;
+					tmp._wrapUsage = 10000000000; // should be enough
+					return tmp;
 				}
 			}, set: function(value) {
 				var current = Module.HEAPU32[location / 4];
-				if (isJSFunction(current)) {
+				if (current && isJSFunction(current)) {
 					var func = Runtime.functionPointers[(current - 2) / 2];
 					func._wrapUsage--;
 					if (func._wrapUsage < 1)
@@ -62,6 +71,7 @@ var OpenTI = (function() {
 				} else {
 					value._wrapUsage++;
 				}
+
 
 				Module.HEAPU32[location / 4] = value._wrapPointer;
 			}
