@@ -1,52 +1,57 @@
-var OpenTI = (function() {
-	var Wrap = {};
-	var ShouldWrap = {
-		Int32: ["HEAP32", 4],
-		UInt32: ["HEAPU32", 4],
-		Int16: ["HEAP16", 2],
-		UInt16: ["HEAPU16", 2],
-		Int8: ["HEAP8", 1],
-		UInt8: ["HEAPU8", 1]
-	}
-	for(var i in ShouldWrap) {
-		var Heap = Module[ShouldWrap[i][0]];
-		var Divisor = ShouldWrap[i][1];
-
-		Wrap[i] = function(obj, name, location, bit, offset) {
+var OpenTI = (function(){
+	var Wrap = {},
+		ShouldWrap = {
+			Int32: ["HEAP32", 4],
+			UInt32: ["HEAPU32", 4],
+			Int16: ["HEAP16", 2],
+			UInt16: ["HEAPU16", 2],
+			Int8: ["HEAP8", 1],
+			UInt8: ["HEAPU8", 1]
+		},
+		i,
+		Heap,
+		Divisor,
+		_Wrap = function(obj, name, location, bit, offset){
 			location /= Divisor;
 
-			if (bit == undefined) {
+			if(bit === undefined){
 				bit = ~0;
 				offset = 0;
 			}
 
 			Object.defineProperty(obj, name, {
-				get: function() {
+				get: function(){
 					return (Heap[location] & bit) >> offset;
 				},
-				set: function(val) {
-					if (bit != ~0)
+				set: function(val){
+					if(bit != ~0){
 						Heap[location] &= ~bit;
+					}
 					Heap[location] |= (val << offset) & bit;
 				}
 			});
-		}
+		};
+	for(i in ShouldWrap){
+		Heap = Module[ShouldWrap[i][0]];
+		Divisor = ShouldWrap[i][1];
+
+		Wrap[i] = _Wrap;
 	}
 
-	function isJSFunction(func_pointer) {
+	function isJSFunction(func_pointer){
 		console.log(func_pointer, func_pointer % 2);
-		return func_pointer != 0 && (func_pointer % 2 == 0) && (func_pointer - 2) / 2 < Runtime.functionPointers.length;
+		return func_pointer !== 0 && (func_pointer % 2 === 0) && (func_pointer - 2) / 2 < Runtime.functionPointers.length;
 	}
 
-	Wrap.Function = function(obj, name, type, location) {
+	Wrap.Function = function(obj, name, type, location){
 		var table = Module["dynCall_"+type];
 		Object.defineProperty(obj, name, {
-			get: function() {
+			get: function(){
 /*				var current = Module.HEAPU32[location / 4];
-				if (isJSFunction(current)) {
+				if(isJSFunction(current)){
 					return Runtime.functionPointers[(current - 2) / 2];
 				} else {
-					var tmp = function() {
+					var tmp = function(){
 						var val = Module.HEAPU32[location / 4];
 						var argarr = Array.prototype.slice.apply(arguments);
 						argarr.unshift(val);
@@ -57,16 +62,16 @@ var OpenTI = (function() {
 					return tmp;
 				}*/
 				return Runtime.getFuncWrapper(Module.HEAPU32[location / 4], type);
-			}, set: function(value) {
+			}, set: function(value){
 /*				var current = Module.HEAPU32[location / 4];
-				if (current && isJSFunction(current)) {
+				if(current && isJSFunction(current)){
 					var func = Runtime.functionPointers[(current - 2) / 2];
 					func._wrapUsage--;
-					if (func._wrapUsage < 1)
+					if(func._wrapUsage < 1)
 						Runtime.removeFunction(func._wrapPointer);
 				}
 
-				if (!value._wrapUsage || value._wrapUsage < 1) {
+				if(!value._wrapUsage || value._wrapUsage < 1){
 					value._wrapPointer = Runtime.addFunction(value);
 					value._wrapUsage = 1;
 				} else {
@@ -79,34 +84,34 @@ var OpenTI = (function() {
 				throw new Error("Setting functions is disabled, as the code is very unstable. (See KnightOS/OpenTI#2)");
 			}
 		});
-	}
+	};
 
-	function dereferencePointer(pointer) {
+	function dereferencePointer(pointer){
 		return Module.HEAPU32[pointer / 4];
 	}
 
-	function CPU() {
-		if(arguments.length != 0)
+	function CPU(){
+		if(arguments.length !== 0){
 			return this;
-
+		}
 		this.initWithInternalPointer(Module._cpu_init());
 	}
 
-	CPU.fromPointer = function(pointer) {
+	CPU.fromPointer = function(pointer){
 		var cpu = new CPU(false);
 		cpu.initWithInternalPointer(pointer);
 		return cpu;
-	}
+	};
 
-	CPU.prototype.toPointer = function() {
+	CPU.prototype.toPointer = function(){
 		return this.internalPointer;
-	}
+	};
 
-	CPU.prototype.initWithInternalPointer = function(int_point) {
+	CPU.prototype.initWithInternalPointer = function(int_point){
 		this.internalPointer = int_point;
 
 		this.devices = [];
-		for(var i = 0; i < 0x100; i++) {
+		for(var i = 0; i < 0x100; i++){
 			this.devices.push(CPU.Z80IODevice.fromPointer(int_point + (12 * i)));
 		}
 
@@ -123,32 +128,32 @@ var OpenTI = (function() {
 		Wrap.UInt8(this, "prefix", int_point + 3100);
 
 		this.memory = dereferencePointer(int_point + 3101);
-	}
+	};
 
-	CPU.prototype.execute = function(cycles) {
-		if (cycles == undefined) {
+	CPU.prototype.execute = function(cycles){
+		if(cycles === undefined){
 			cycles = -1;
 		}
 
 		return Module._cpu_execute(this.internalPointer, cycles);
-	}
+	};
 
-	CPU.prototype.raiseInterrupt = function() {
+	CPU.prototype.raiseInterrupt = function(){
 		Module._cpu_raise_interrupt(this.internalPointer);
-	}
+	};
 
-	CPU.Registers = function(pointer) {
-		if (pointer != undefined)
+	CPU.Registers = function(pointer){
+		if(pointer !== undefined){
 			this.initWithInternalPointer(pointer);
-
+		}
 		return this;
-	}
+	};
 
-	CPU.Registers.fromPointer = function(pointer) {
+	CPU.Registers.fromPointer = function(pointer){
 		return new CPU.Registers(pointer);
-	}
+	};
 
-	CPU.Registers.prototype.initWithInternalPointer = function(int_point) {
+	CPU.Registers.prototype.initWithInternalPointer = function(int_point){
 		this.internalPointer = int_point;
 
 		Wrap.UInt16(this, "AF", int_point);
@@ -197,51 +202,51 @@ var OpenTI = (function() {
 		Wrap.UInt8(this, "R", int_point + 25);
 
 		// length: 26
-	}
+	};
 
-	CPU.Z80IODevice = function() {
-		if(arguments.length != 0)
+	CPU.Z80IODevice = function(){
+		if(arguments.length !== 0){
 			return this;
-
+		}
 		this.initWithInternalPointer(Module._malloc(12));
-	}
+	};
 
-	CPU.Z80IODevice.fromPointer = function(pointer) {
+	CPU.Z80IODevice.fromPointer = function(pointer){
 		var cpu = new CPU.Z80IODevice(false);
 		cpu.initWithInternalPointer(pointer);
 		return cpu;
-	}
+	};
 
-	CPU.Z80IODevice.prototype.toPointer = function() {
+	CPU.Z80IODevice.prototype.toPointer = function(){
 		return this.internalPointer;
-	}
+	};
 
-	CPU.Z80IODevice.prototype.initWithInternalPointer = function(int_point) {
+	CPU.Z80IODevice.prototype.initWithInternalPointer = function(int_point){
 		this.internalPointer = int_point;
 		Wrap.UInt32(this, "device", int_point);
 		Wrap.Function(this, "read", "ii", int_point + 4);
 		Wrap.Function(this, "write", "vii", int_point + 8);
-	}
+	};
 
-	function MMU(type) {
-		if (type === undefined)
+	function MMU(type){
+		if(type === undefined){
 			return this;
-
+		}
 		this.initWithInternalPointer(Module._ti_mmu_init(type));
 		return this;
 	}
 
-	MMU.fromPointer = function(pointer) {
+	MMU.fromPointer = function(pointer){
 		var mmu = new MMU();
 		mmu.initWithInternalPointer(pointer);
 		return mmu;
-	}
+	};
 
-	MMU.prototype.toPointer = function() {
+	MMU.prototype.toPointer = function(){
 		return this.internalPointer;
-	}
+	};
 
-	MMU.prototype.initWithInternalPointer = function(int_point) {
+	MMU.prototype.initWithInternalPointer = function(int_point){
 		this.internalPointer = int_point;
 
 		this.settings = MMU.Settings.fromPointer(dereferencePointer(int_point));
@@ -253,79 +258,78 @@ var OpenTI = (function() {
 		this.ram = new Uint8Array(Module.HEAPU8, Module.HEAP32[int_point + 36]);
 		this.flash = new Uint8Array(Module.HEAPU8, Module.HEAP32[int_point + 40]);
 		Wrap.Int32(this, "flash_unlocked", int_point + 44);
-	}
+	};
 
-	MMU.Bank = function(internal_pointer) {
-		if (internal_pointer === undefined)
-			return this;
-		this.initWithInternalPointer(internal_pointer);
+	MMU.Bank = function(internal_pointer){
+		if(internal_pointer !== undefined){
+			this.initWithInternalPointer(internal_pointer);
+		}
 		return this;
-	}
+	};
 
-	MMU.Bank.fromPointer = function(pointer) {
+	MMU.Bank.fromPointer = function(pointer){
 		return new MMU.Bank(pointer);
-	}
+	};
 
-	MMU.Bank.prototype.toPointer = function() {
+	MMU.Bank.prototype.toPointer = function(){
 		return this.internalPointer;
-	}
+	};
 
-	MMU.Bank.prototype.initWithInternalPointer = function(int_point) {
+	MMU.Bank.prototype.initWithInternalPointer = function(int_point){
 		this.internalPointer = int_point;
 		Wrap.UInt8(this, "page", int_point);
 		Wrap.Int32(this, "flash", int_point + 3);
-	}
+	};
 
-	MMU.Settings = function(internal_pointer) {
-		if (internal_pointer === undefined)
-			return this;
-		this.initWithInternalPointer(internal_pointer);
+	MMU.Settings = function(internal_pointer){
+		if(internal_pointer !== undefined){
+			this.initWithInternalPointer(internal_pointer);
+		}
 		return this;
-	}
+	};
 
-	MMU.Settings.fromPointer = function(pointer) {
+	MMU.Settings.fromPointer = function(pointer){
 		var mmu = new MMU.Settings();
 		mmu.initWithInternalPointer(pointer);
 		return mmu;
-	}
+	};
 
-	MMU.Settings.prototype.toPointer = function() {
+	MMU.Settings.prototype.toPointer = function(){
 		return this.internalPointer;
-	}
+	};
 
-	MMU.Settings.prototype.initWithInternalPointer = function(int_point) {
+	MMU.Settings.prototype.initWithInternalPointer = function(int_point){
 		this.internalPointer = int_point;
 		Wrap.UInt16(this, "ramPages", int_point);
 		Wrap.UInt16(this, "flashPages", int_point + 2);
-	}
+	};
 	
-	function Asic(type) {
-		if (type === undefined)
-			return this;
-	
-		this.initWithInternalPointer(Module._asic_init(type));
+	function Asic(type){
+		if(type !== undefined){
+			this.initWithInternalPointer(Module._asic_init(type));
+		}
 		return this;
 	}
 
-	Asic.fromPointer = function(pointer) {
+	Asic.fromPointer = function(pointer){
 		var asic = new Asic();
 		asic.initWithInternalPointer(pointer);
 
 		return asic;
-	}
+	};
 
-	Asic.prototype.toPointer = function() {
+	Asic.prototype.toPointer = function(){
 		return this.internalPointer;
-	}
+	};
 
-	Asic.prototype.initWithInternalPointer = function(internal_p) {
+	Asic.prototype.initWithInternalPointer = function(internal_p){
 		this.internalPointer = internal_p;
 		this.cpu = CPU.fromPointer(dereferencePointer(internal_p));
 		Wrap.Int32(this, "device", internal_p + 4);
 		this.mmu = MMU.fromPointer(dereferencePointer(internal_p + 8));
 		Wrap.Int32(this, "battery", internal_p + 12);
 		Wrap.Int32(this, "battery_remove_check", internal_p + 16);
-	}
+	};
 
 	var OpenTI = {
 		deviceType: {
@@ -348,7 +352,7 @@ var OpenTI = (function() {
 			Asic: Asic,
 			MMU: MMU
 		}
-	}
+	};
 
 	return OpenTI;
-})()
+})();
