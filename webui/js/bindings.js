@@ -50,6 +50,7 @@ var OpenTI = (function() {
 	}
 
 	var Core = {};
+
 	Core.Registers = function(pointer) {
 		if (!pointer) {
 			throw "This object can only be instantiated with a memory region predefined!";
@@ -118,7 +119,6 @@ var OpenTI = (function() {
 
 	Core.CPU = function(pointer) {
 		if (!pointer) {
-			console.log("Creating new CPU");
 			pointer = Module["_cpu_init"]();
 		}
 		this.pointer = pointer;
