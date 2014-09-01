@@ -10,6 +10,7 @@ define(function(require) {
         TI: {
             ASIC: require("OpenTI/TI/ASIC"),
             DeviceType: require("OpenTI/TI/DeviceType"),
+            MMU: require("OpenTI/TI/MMU"),
         },
         Runloop: require("OpenTI/Runloop")
     };

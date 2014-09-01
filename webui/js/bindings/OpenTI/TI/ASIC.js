@@ -1,20 +1,20 @@
-define(["OpenTI/Core/CPU", "OpenTI/Runloop"], function(CPU, Runloop) {
+define(["OpenTI/wrap", "OpenTI/Core/CPU", "OpenTI/Runloop", "OpenTI/TI/MMU"], function(Wrap, CPU, Runloop, MMU) {
     var ASIC = function(device) {
         pointer = Module["_asic_init"](device);
 
         this.pointer = pointer;
 
-	Wrap.Int32(this, "stopped", pointer);
-	pointer += 4;
+        Wrap.Int32(this, "stopped", pointer);
+        pointer += 4;
 
-	Wrap.Int32(this, "device", pointer);
-	pointer += 4;
+        Wrap.Int32(this, "device", pointer);
+        pointer += 4;
 
-	Wrap.Int32(this, "battery", pointer);
-	pointer += 4;
+        Wrap.Int32(this, "battery", pointer);
+        pointer += 4;
 
-	Wrap.Int32(this, "battery_remove_check", pointer);
-	pointer += 4;
+        Wrap.Int32(this, "battery_remove_check", pointer);
+        pointer += 4;
 
         Object.defineProperty(this, "clock_rate", {
             get: (function() {
@@ -25,16 +25,16 @@ define(["OpenTI/Core/CPU", "OpenTI/Runloop"], function(CPU, Runloop) {
             }).bind(this)
         });
 
-	pointer += 4;
+        pointer += 4;
 
         Wrap.Pointer(this, "cpu", pointer, CPU);
-	pointer += 4;
+        pointer += 4;
 
         Wrap.Pointer(this, "runloop", pointer, Runloop);
-	pointer += 4;
+        pointer += 4;
 
-//        Wrap.Pointer(this, "mmu", pointer, MMU);
-	pointer += 4;
+        Wrap.Pointer(this, "mmu", pointer, MMU);
+        pointer += 4;
     }
 
     ASIC.prototype.free = function() {
