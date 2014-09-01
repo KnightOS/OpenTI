@@ -175,7 +175,15 @@
     <script src="js/bootstrap.min.js"></script>
     <script src="js/ui.js"></script>
     <script src="js/z80e.js"></script>
-    <script src="js/bindings.js"></script>
+    <script src="js/require.js"></script>
+    <script>
+        var OpenTI;
+        requirejs.config({ baseUrl: 'js/bindings' });
+        require(["OpenTI/OpenTI"], function(oti) {
+            console.log("OpenTI loaded!");
+            OpenTI = oti;
+        });
+    </script>
   </body>
 </html>
 
