@@ -1,4 +1,4 @@
-define(["../wrap", "../Debugger/HookInfo"], function(Wrap, HookInfo) {
+define(["require", "../wrap", "../Debugger/HookInfo"], function(require, Wrap) {
     var MMU = function(pointer) {
         if (typeof pointer == "undefined") {
             throw "Either pass a pointer or a device type!";
@@ -45,7 +45,7 @@ define(["../wrap", "../Debugger/HookInfo"], function(Wrap, HookInfo) {
         Wrap.Int32(this, "flash_unlocked", pointer);
         pointer += 4;
         
-        Wrap.Pointer(this, "hook", pointer, HookInfo);
+        Wrap.Pointer(this, "hook", pointer, require("../Debugger/HookInfo"));
     }
     
     MMU.prototype.readByte = function(address) {

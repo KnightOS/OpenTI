@@ -1,4 +1,4 @@
-define(["require", "../wrap", "../TI/ASIC"], function(require, Wrap, ASIC) {
+define(["require", "../wrap", "../TI/ASIC"], function(require, Wrap) {
     var wrapped = {};
     var new_wrapped = 0;
 
@@ -110,7 +110,7 @@ define(["require", "../wrap", "../TI/ASIC"], function(require, Wrap, ASIC) {
         this.interfaceState = wrapped[new_wrapped - 1];
         pointer += 4;
         
-        Wrap.Pointer(this, "asic", pointer, ASIC);
+        Wrap.Pointer(this, "asic", pointer, require("../TI/ASIC"));
         pointer += 4;
 
         Wrap.Pointer(this, "debugger", pointer, Debugger);

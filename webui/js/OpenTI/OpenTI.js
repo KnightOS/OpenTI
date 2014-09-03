@@ -12,6 +12,7 @@ define(function(require) {
             ASIC: require("./TI/ASIC"),
             DeviceType: require("./TI/DeviceType"),
             MMU: require("./TI/MMU"),
+            Hardware: require("./TI/Hardware/Hardware")
         },
         Runloop: require("./Runloop")
     };

@@ -1,4 +1,4 @@
-define(["../wrap", "../Debugger/HookInfo", "./Registers"], function(Wrap, HookInfo, Registers) {
+define(["require", "../wrap", "./Registers", "../Debugger/HookInfo"], function(require, Wrap, Registers) {
     CPU = function(pointer) {
         if (!pointer) {
             pointer = Module["_cpu_init"]();
@@ -34,7 +34,7 @@ define(["../wrap", "../Debugger/HookInfo", "./Registers"], function(Wrap, HookIn
         Wrap.Int32(this, "interrupt", pointer);
         pointer += 4;
 
-        Wrap.Pointer(this, "hook", pointer, HookInfo);
+        Wrap.Pointer(this, "hook", pointer, require("../Debugger/HookInfo"));
     }
 
     CPU.prototype.execute = function(cycles) {

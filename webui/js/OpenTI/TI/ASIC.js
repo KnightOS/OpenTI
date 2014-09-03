@@ -1,4 +1,7 @@
-define(["require", "../wrap", "../Core/CPU", "../Runloop", "./MMU", "../Debugger/Debugger"], function(require, Wrap, CPU, Runloop, MMU) {
+define(
+  ["require", "../wrap", "../Runloop", "./MMU", "../Core/CPU",
+   "../Debugger/HookInfo", "../Debugger/Debugger", "./Hardware/Hardware"],
+  function(require, Wrap, Runloop, MMU) {
     var ASIC = function(device) {
         pointer = Module["_asic_init"](device);
 
@@ -18,7 +21,7 @@ define(["require", "../wrap", "../Core/CPU", "../Runloop", "./MMU", "../Debugger
 
         Object.defineProperty(this, "clock_rate", {
             get: (function() {
-                return this.pointer + 16;
+                return HEAP32[(this.pointer + 16) / 4];
             }).bind(this),
             set: (function(val) {
                 Module["_asic_set_clock_rate"](this.pointer, val);
@@ -27,14 +30,23 @@ define(["require", "../wrap", "../Core/CPU", "../Runloop", "./MMU", "../Debugger
 
         pointer += 4;
 
-        Wrap.Pointer(this, "cpu", pointer, CPU);
+        Object.defineProperty(this, "hardware", {
+            get: (function() {
+                return require("./Hardware/Hardware")(this.cpu);
+            }.bind(this))
+        });
+
+        Wrap.Pointer(this, "cpu", pointer, require("../Core/CPU"));
         pointer += 4;
 
         Wrap.Pointer(this, "runloop", pointer, Runloop);
         pointer += 4;
 
         Wrap.Pointer(this, "mmu", pointer, MMU);
-        pointer += 20;
+        pointer += 12;
+
+        Wrap.Pointer(this, "hook", pointer, require("../Debugger/HookInfo"));
+        pointer += 8;
 
         Wrap.Pointer(this, "debugger", pointer, require("../Debugger/Debugger"));
         pointer += 4;

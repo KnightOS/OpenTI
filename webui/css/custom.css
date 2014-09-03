@@ -27,6 +27,11 @@ body {
   border-bottom: 0 solid white;
 }
 
+#debugger pre, #log pre {
+  height: 10em;
+  overflow: auto;
+}
+
 .disassemble-lineno {
   text-align: right;
   padding-right: 0;

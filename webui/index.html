@@ -156,6 +156,7 @@ Alpha
           </div>
         </div>
         <div class="col-md-6">
+          <canvas id="screen" width="480" height="256" />
         </div>
         <div class="col-md-3">
           <div class="panel panel-primary collapsible" id="log">
@@ -179,10 +180,17 @@ Alpha
     <!-- Bootstrap core JavaScript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
+
+    <script>
+        var Module = {
+            memoryInitializerPrefixURL: "js/lib/"
+        };
+    </script>
     <script src="js/lib/z80e.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
     <script src="js/lib/bootstrap.min.js"></script>
     <script data-main="js/main.js" src="js/lib/require.js"></script>
+    <script>requirejs.config({urlArgs: "bust=" +  (new Date()).getTime()});</script>
   </body>
 </html>
 
