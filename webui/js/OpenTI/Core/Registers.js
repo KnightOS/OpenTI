@@ -1,4 +1,4 @@
-define(["OpenTI/wrap"], function(Wrap) {
+define(["../wrap"], function(Wrap) {
     var Registers = function(pointer) {
         if (!pointer) {
             throw "This object can only be instantiated with a memory region predefined!";

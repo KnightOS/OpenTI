@@ -1,4 +1,4 @@
-define(["OpenTI/wrap", "OpenTI/Debugger/HookInfo"], function(Wrap, HookInfo) {
+define(["../wrap", "../Debugger/HookInfo"], function(Wrap, HookInfo) {
     var MMU = function(pointer) {
         if (typeof pointer == "undefined") {
             throw "Either pass a pointer or a device type!";

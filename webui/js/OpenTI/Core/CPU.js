@@ -1,4 +1,4 @@
-define(["OpenTI/wrap", "OpenTI/Debugger/HookInfo", "OpenTI/Core/Registers"], function(Wrap, HookInfo, Registers) {
+define(["../wrap", "../Debugger/HookInfo", "./Registers"], function(Wrap, HookInfo, Registers) {
     CPU = function(pointer) {
         if (!pointer) {
             pointer = Module["_cpu_init"]();

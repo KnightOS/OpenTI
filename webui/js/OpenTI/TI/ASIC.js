@@ -1,4 +1,4 @@
-define(["OpenTI/wrap", "OpenTI/Core/CPU", "OpenTI/Runloop", "OpenTI/TI/MMU"], function(Wrap, CPU, Runloop, MMU) {
+define(["require", "../wrap", "../Core/CPU", "../Runloop", "./MMU", "../Debugger/Debugger"], function(require, Wrap, CPU, Runloop, MMU) {
     var ASIC = function(device) {
         pointer = Module["_asic_init"](device);
 
@@ -34,7 +34,11 @@ define(["OpenTI/wrap", "OpenTI/Core/CPU", "OpenTI/Runloop", "OpenTI/TI/MMU"], fu
         pointer += 4;
 
         Wrap.Pointer(this, "mmu", pointer, MMU);
+        pointer += 20;
+
+        Wrap.Pointer(this, "debugger", pointer, require("../Debugger/Debugger"));
         pointer += 4;
+
     }
 
     ASIC.prototype.free = function() {
