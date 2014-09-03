@@ -90,3 +90,10 @@ body {
             user-select: none;
   cursor: default;
 }
+
+#screen {
+	position: relative;
+	left: 50%;
+	margin-left: -240px;
+	border: 4px solid #eee;
+}
