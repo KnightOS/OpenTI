@@ -11,7 +11,7 @@ define(function() {
     }
 
     Keyboard.prototype.release = function(code) {
-        Module["_depress_key"](this.pointer, code);
+        Module["_release_key"](this.pointer, code);
     }
 
     return Keyboard;
