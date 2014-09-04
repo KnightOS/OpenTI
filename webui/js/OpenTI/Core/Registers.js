@@ -62,7 +62,7 @@ define(["../wrap"], function(Wrap) {
     }
 
     Registers.sizeOf = function() {
-        return 26 + 2;
+        return 26;
     }
 
     return Registers;
