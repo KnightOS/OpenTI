@@ -46,32 +46,34 @@ define(["require", "../wrap", "../TI/ASIC"], function(require, Wrap) {
         Wrap.Int32(_commands, "commands_pointer", pointer);
         pointer += 4;
 
-        this.commands = new Proxy(_commands, {
-            get: function(target, key) {
-                if (isNaN(key)) {
-                    return target[key];
-                } else if(parseInt(key, 10) < target.length) {
-                    return new Debugger.Command(Module.HEAPU32[(target.commands_pointer + (parseInt(key, 10) * 4)) / 4]);
+        if (typeof Proxy !== "undefined") { // Proxy is an experimental API
+            this.commands = new Proxy(_commands, {
+                get: function(target, key) {
+                    if (isNaN(key)) {
+                        return target[key];
+                    } else if(parseInt(key, 10) < target.length) {
+                        return new Debugger.Command(Module.HEAPU32[(target.commands_pointer + (parseInt(key, 10) * 4)) / 4]);
+                    }
+                },
+                set: function(target, key, value) {
+                    return false;
+                },
+                has: function(target, key) {
+                    if (parseInt(key, 10) < target.length) {
+                        return true;
+                    } else {
+                        return target.hasItem(key);
+                    }
+                },
+                enumerate: function(target) {
+                    var keys = [];
+                    for (var i = 0; i < target.length; i++) {
+                        keys.push(i);
+                    }
+                    return keys;
                 }
-            },
-            set: function(target, key, value) {
-                return false;
-            },
-            has: function(target, key) {
-                if (parseInt(key, 10) < target.length) {
-                    return true;
-                } else {
-                    return target.hasItem(key);
-                }
-            },
-            enumerate: function(target) {
-                var keys = [];
-                for (var i = 0; i < target.length; i++) {
-                    keys.push(i);
-                }
-                return keys;
-            }
-        });
+            });
+        }
 
         Wrap.Pointer(this, "asic", pointer, require("../TI/ASIC"));
         pointer += 4;
