@@ -16,6 +16,7 @@ define(["require", "../wrap", "./Registers", "../Debugger/HookInfo"], function(r
         Wrap.UInt8(this, "IFF1", pointer, 1, 0);
         Wrap.UInt8(this, "IFF2", pointer, 2, 1);
         Wrap.UInt8(this, "int_mode", pointer, 12, 2);
+        Wrap.UInt8(this, "halted", pointer, 32, 5);
         pointer++;
 
         Wrap.UInt8(this, "bus", pointer++);
