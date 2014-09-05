@@ -23,8 +23,14 @@ define(["require", "../../wrap", "../../TI/ASIC", "../../Debugger/HookInfo"], fu
         Wrap.UInt8(this, "contrast", pointer);
         pointer += 4;
 
+
         Wrap.Int32(this, "ram_pointer", pointer);
         pointer += 4;
+        Object.defineProperty(this, "ram", {
+            get: (function() {
+                return Module.HEAPU8.subarray(this.ram_pointer, this.ram_pointer + 64 * 120);
+            }).bind(this)
+        });
 
         Wrap.Pointer(this, "hook", pointer, require("../../Debugger/HookInfo"));
         pointer += 4;
