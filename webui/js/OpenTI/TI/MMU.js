@@ -1,9 +1,9 @@
-define(["require", "../wrap", "../Debugger/HookInfo"], function(require, Wrap) {
+define(["z80e", "../wrap", "../Debugger/HookInfo"], function(z80e, Wrap, HookInfo) {
     var MMU = function(pointer) {
         if (typeof pointer == "undefined") {
             throw "Either pass a pointer or a device type!";
         } else if (pointer < 6) {
-            pointer = Module["_ti_mmu_init"](pointer);
+            pointer = z80e.Module["_ti_mmu_init"](pointer);
         }
 
         this.pointer = pointer;
@@ -29,7 +29,7 @@ define(["require", "../wrap", "../Debugger/HookInfo"], function(require, Wrap) {
 
         Object.defineProperty(this, "ram", {
             get: (function() {
-                return new Uint8Array(Module.HEAPU8, Module.HEAPU32[this._ramPointer], this.settings.ram_pages * 0x4000);
+                return new Uint8Array(z80e.Module.HEAPU8, z80e.Module.HEAPU32[this._ramPointer], this.settings.ram_pages * 0x4000);
             }).bind(this)
         });
 
@@ -38,30 +38,30 @@ define(["require", "../wrap", "../Debugger/HookInfo"], function(require, Wrap) {
 
         Object.defineProperty(this, "flash", {
             get: (function() {
-                return new Uint8Array(Module.HEAPU8, Module.HEAPU32[this._flashPointer], this.settings.flash_pages * 0x4000);
+                return new Uint8Array(z80e.Module.HEAPU8, z80e.Module.HEAPU32[this._flashPointer], this.settings.flash_pages * 0x4000);
             }).bind(this)
         });
         
         Wrap.Int32(this, "flash_unlocked", pointer);
         pointer += 4;
         
-        Wrap.Pointer(this, "hook", pointer, require("../Debugger/HookInfo"));
+        Wrap.Pointer(this, "hook", pointer, HookInfo);
     }
     
     MMU.prototype.readByte = function(address) {
-        return Module["_ti_read_byte"](this.pointer, address);
+        return z80e.Module["_ti_read_byte"](this.pointer, address);
     }
     
     MMU.prototype.writeByte = function(address, value) {
-        return Module["_ti_write_byte"](this.pointer, address, value);
+        return z80e.Module["_ti_write_byte"](this.pointer, address, value);
     }
     
     MMU.prototype.forceWriteByte = function(address, value) {
-        return Module["_mmu_force_write"](this.pointer, address, value);
+        return z80e.Module["_mmu_force_write"](this.pointer, address, value);
     }
     
     MMU.prototype.free = function() {
-        Module["_ti_mmu_free"](this.pointer);
+        z80e.Module["_ti_mmu_free"](this.pointer);
     }
     
     return MMU;

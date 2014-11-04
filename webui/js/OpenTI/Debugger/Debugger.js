@@ -1,4 +1,4 @@
-define(["require", "../wrap", "../TI/ASIC"], function(require, Wrap) {
+define(["z80e", "../wrap", "../TI/ASIC"], function(z80e, Wrap, ASIC) {
     var wrapped = {};
     var new_wrapped = 0;
 
@@ -25,8 +25,8 @@ define(["require", "../wrap", "../TI/ASIC"], function(require, Wrap) {
 
     var Debugger = function(pointer) {
         if (typeof pointer == "number") {
-        } else if (pointer.constructor == require("../TI/ASIC")) {
-            pointer = Module["_init_debugger"](pointer.pointer);
+        } else if (pointer.constructor == ASIC) {
+            pointer = z80e.Module["_init_debugger"](pointer.pointer);
         } else {
             throw "Either pass a pointer or an ASIC!";
         }
@@ -52,7 +52,7 @@ define(["require", "../wrap", "../TI/ASIC"], function(require, Wrap) {
                     if (isNaN(key)) {
                         return target[key];
                     } else if(parseInt(key, 10) < target.length) {
-                        return new Debugger.Command(Module.HEAPU32[(target.commands_pointer + (parseInt(key, 10) * 4)) / 4]);
+                        return new Debugger.Command(z80.Module.HEAPU32[(target.commands_pointer + (parseInt(key, 10) * 4)) / 4]);
                     }
                 },
                 set: function(target, key, value) {
@@ -75,7 +75,7 @@ define(["require", "../wrap", "../TI/ASIC"], function(require, Wrap) {
             });
         }
 
-        Wrap.Pointer(this, "asic", pointer, require("../TI/ASIC"));
+        Wrap.Pointer(this, "asic", pointer, ASIC);
         pointer += 4;
 
         Wrap.Int32(this, "state", pointer);
@@ -95,7 +95,7 @@ define(["require", "../wrap", "../TI/ASIC"], function(require, Wrap) {
 
     Debugger.State = function(pointer, obj) {
         if (pointer.constructor == Debugger) {
-            pointer = Module["_openti_new_state"](pointer.pointer, new_wrapped++);
+            pointer = z80e.Module["_openti_new_state"](pointer.pointer, new_wrapped++);
             wrapped[new_wrapped - 1] = obj;
         } else {
             throw "Call this constructor with a Debugger!";
@@ -112,7 +112,7 @@ define(["require", "../wrap", "../TI/ASIC"], function(require, Wrap) {
         this.interfaceState = wrapped[new_wrapped - 1];
         pointer += 4;
         
-        Wrap.Pointer(this, "asic", pointer, require("../TI/ASIC"));
+        Wrap.Pointer(this, "asic", pointer, ASIC);
         pointer += 4;
 
         Wrap.Pointer(this, "debugger", pointer, Debugger);
@@ -125,13 +125,13 @@ define(["require", "../wrap", "../TI/ASIC"], function(require, Wrap) {
     Debugger.State.prototype.exec = function(command) {
         var stack = Runtime.stackSave();
         var strpoint = allocate(intArrayFromString(command), 'i8', ALLOC_STACK);
-        var ret = Module["_debugger_exec"](this.pointer, strpoint);
+        var ret = z80e.Module["_debugger_exec"](this.pointer, strpoint);
         Runtime.stackRestore(stack);
         return ret;
     }
 
     Debugger.State.prototype.close = function() {
-        Module["_openti_close_window"](this.pointer);
+        z80e.Module["_openti_close_window"](this.pointer);
     }
 
     Debugger.Command = function(pointer) {
@@ -143,7 +143,7 @@ define(["require", "../wrap", "../TI/ASIC"], function(require, Wrap) {
 
         Object.defineProperty(this, "name", {
             get: (function() {
-                return Pointer_stringify(Module.HEAPU32[this.pointer / 4]);
+                return Pointer_stringify(z80e.Module.HEAPU32[this.pointer / 4]);
             }).bind(this)
         });
         pointer += 4;
