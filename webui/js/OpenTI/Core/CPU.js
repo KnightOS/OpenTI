@@ -1,8 +1,7 @@
-define(["z80e", "../wrap", "./Registers", "../Debugger/HookInfo"],
-    function(z80e, Wrap, Registers, HookInfo) {
+define(["require", "../wrap", "./Registers", "../Debugger/HookInfo"], function(require, Wrap, Registers) {
     CPU = function(pointer) {
         if (!pointer) {
-            pointer = z80e.Module["_cpu_init"]();
+            pointer = Module["_cpu_init"]();
         }
         this.pointer = pointer;
 
@@ -36,18 +35,18 @@ define(["z80e", "../wrap", "./Registers", "../Debugger/HookInfo"],
         Wrap.Int32(this, "interrupt", pointer);
         pointer += 4;
 
-        Wrap.Pointer(this, "hook", pointer, HookInfo);
+        Wrap.Pointer(this, "hook", pointer, require("../Debugger/HookInfo"));
     }
 
     CPU.prototype.execute = function(cycles) {
         if (!cycles) {
             cycles = -1;
         }
-        return z80e.Module["_cpu_execute"](this.pointer, cycles);
+        return Module["_cpu_execute"](this.pointer, cycles);
     }
 
     CPU.prototype.free = function() {
-        z80e.Module["_cpu_free"](this.pointer);
+        Module["_cpu_free"](this.pointer);
     }
 
     CPU.sizeOf = function() {

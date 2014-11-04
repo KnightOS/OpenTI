@@ -1,21 +1,19 @@
-define(['./Core/CPU', './Core/Registers', './Debugger/HookInfo', './Debugger/Debugger',
-        './TI/ASIC', './TI/DeviceType', './TI/MMU', './TI/Hardware/Hardware', './Runloop'], 
-    function(_cpu, _registers, _hookinfo, _debugger, _asic, _devicetype, _mmu, _hardware, _runloop) {
+define(function(require) {
     return {
         Core: {
-            CPU: _cpu,
-            Registers: _registers,
+            CPU: require("./Core/CPU"),
+            Registers: require("./Core/Registers"),
         },
         Debugger: {
-            HookInfo: _hookinfo,
-            Debugger: _debugger,
+            HookInfo: require("./Debugger/HookInfo"),
+            Debugger: require("./Debugger/Debugger"),
         },
         TI: {
-            ASIC: _asic,
-            DeviceType: _devicetype,
-            MMU: _mmu,
-            Hardware: _hardware
+            ASIC: require("./TI/ASIC"),
+            DeviceType: require("./TI/DeviceType"),
+            MMU: require("./TI/MMU"),
+            Hardware: require("./TI/Hardware/Hardware")
         },
-        Runloop: _runloop
+        Runloop: require("./Runloop")
     };
 });

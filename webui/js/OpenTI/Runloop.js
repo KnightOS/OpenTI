@@ -1,7 +1,7 @@
-define(['z80e'], function(z80e) {
+define(function() {
     var Runloop = function(pointer) {
         if (!pointer) {
-            pointer = z80e.Module["_runloop_init"]();
+            pointer = Module["_runloop_init"]();
         }
 
         this.pointer = pointer;
@@ -9,9 +9,9 @@ define(['z80e'], function(z80e) {
 
     Runloop.prototype.tick = function(cycles) {
         if (!cycles) {
-            return z80e.Module["_runloop_tick"](this.pointer);
+            return Module["_runloop_tick"](this.pointer);
         } else {
-            return z80e.Module["_runloop_tick_cycles"](this.pointer, cycles);
+            return Module["_runloop_tick_cycles"](this.pointer, cycles);
         }
     }
 

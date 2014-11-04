@@ -1,8 +1,9 @@
-define(["z80e", "../wrap", "../Runloop", "./MMU", "../Core/CPU",
+define(
+  ["require", "../wrap", "../Runloop", "./MMU", "../Core/CPU",
    "../Debugger/HookInfo", "../Debugger/Debugger", "./Hardware/Hardware"],
-  function(z80e, Wrap, Runloop, MMU, CPU, HookInfo, Debugger, Hardware) {
+  function(require, Wrap, Runloop, MMU) {
     var ASIC = function(device) {
-        pointer = z80e.Module["_asic_init"](device);
+        pointer = Module["_asic_init"](device);
 
         this.pointer = pointer;
 
@@ -23,7 +24,7 @@ define(["z80e", "../wrap", "../Runloop", "./MMU", "../Core/CPU",
                 return HEAP32[(this.pointer + 16) / 4];
             }).bind(this),
             set: (function(val) {
-                z80e.Module["_asic_set_clock_rate"](this.pointer, val);
+                Module["_asic_set_clock_rate"](this.pointer, val);
             }).bind(this)
         });
 
@@ -31,11 +32,11 @@ define(["z80e", "../wrap", "../Runloop", "./MMU", "../Core/CPU",
 
         Object.defineProperty(this, "hardware", {
             get: (function() {
-                return Hardware(this.cpu);
+                return require("./Hardware/Hardware")(this.cpu);
             }.bind(this))
         });
 
-        Wrap.Pointer(this, "cpu", pointer, CPU);
+        Wrap.Pointer(this, "cpu", pointer, require("../Core/CPU"));
         pointer += 4;
 
         Wrap.Pointer(this, "runloop", pointer, Runloop);
@@ -44,16 +45,16 @@ define(["z80e", "../wrap", "../Runloop", "./MMU", "../Core/CPU",
         Wrap.Pointer(this, "mmu", pointer, MMU);
         pointer += 12;
 
-        Wrap.Pointer(this, "hook", pointer, HookInfo);
+        Wrap.Pointer(this, "hook", pointer, require("../Debugger/HookInfo"));
         pointer += 8;
 
-        Wrap.Pointer(this, "debugger", pointer, Debugger);
+        Wrap.Pointer(this, "debugger", pointer, require("../Debugger/Debugger"));
         pointer += 4;
 
     }
 
     ASIC.prototype.free = function() {
-        z80e.Module["_asic_free"](this.pointer);
+        Module["_asic_free"](this.pointer);
     }
 
     return ASIC;

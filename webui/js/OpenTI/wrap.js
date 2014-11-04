@@ -1,4 +1,4 @@
-define(["z80e"], function(z80e) {
+define(function() {
     var Wrap = {};
     var ShouldWrap = {
         Int32: ["HEAP32", 4],
@@ -9,7 +9,7 @@ define(["z80e"], function(z80e) {
         UInt8: ["HEAPU8", 1],
     }
     for(var i in ShouldWrap) {
-        var Heap = z80e.Module[ShouldWrap[i][0]];
+        var Heap = Module[ShouldWrap[i][0]];
         var Divisor = ShouldWrap[i][1];
 
         Wrap[i] = (function(Heap, Divisor) {
@@ -41,11 +41,11 @@ define(["z80e"], function(z80e) {
 
         Object.defineProperty(obj, name, {
             get: function() {
-                return new pointerClass(z80e.Module.HEAPU32[location]);
+                return new pointerClass(Module.HEAPU32[location]);
             },
 
             set: function(val) {
-                z80e.Module.HEAPU32[location] = val.pointer;
+                Module.HEAPU32[location] = val.pointer;
             }
         });
     }
