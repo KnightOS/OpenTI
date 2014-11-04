@@ -1,4 +1,4 @@
-define(["require", "../TI/Hardware/T6A04"], function(require) {
+define(["require", "z80e", "../TI/Hardware/T6A04"], function(require, z80e) {
     function hook_memory(ref, address, value) {
         return hook_memory.hooks[ref](address, value);
     }
@@ -24,10 +24,10 @@ define(["require", "../TI/Hardware/T6A04"], function(require) {
     hook_lcd.next_hook = 0;
 
     var ids = {
-        memory: Module.Runtime.addFunction(hook_memory),
-        register: Module.Runtime.addFunction(hook_register),
-        execute: Module.Runtime.addFunction(hook_execute),
-        lcd: Module.Runtime.addFunction(hook_lcd),
+        memory: z80e.Module.Runtime.addFunction(hook_memory),
+        register: z80e.Module.Runtime.addFunction(hook_register),
+        execute: z80e.Module.Runtime.addFunction(hook_execute),
+        lcd: z80e.Module.Runtime.addFunction(hook_lcd),
     };
 
     var HookInfo = function(pointer) {
@@ -44,37 +44,37 @@ define(["require", "../TI/Hardware/T6A04"], function(require) {
 
     HookInfo.prototype.addMemoryRead = function(start, end, hook_func) {
         hook_memory.hooks[hook_memory.next_hook] = hook_func;
-        return Module["_hook_add_memory_read"](this.pointer, start, end, hook_memory.next_hook++, ids.memory);
+        return z80e.Module["_hook_add_memory_read"](this.pointer, start, end, hook_memory.next_hook++, ids.memory);
     }
 
     HookInfo.prototype.addMemoryWrite = function(start, end, hook_func) {
         hook_memory.hooks[hook_memory.next_hook] = hook_func;
-        return Module["_hook_add_memory_write"](this.pointer, start, end, hook_memory.next_hook++, ids.memory);
+        return z80e.Module["_hook_add_memory_write"](this.pointer, start, end, hook_memory.next_hook++, ids.memory);
     }
 
     HookInfo.prototype.addRegisterRead = function(register, hook_func) {
         hook_register.hooks[hook_register.next_hook] = hook_func;
-        return Module["_hook_add_register_read"](this.pointer, register,hook_register.next_hook++, ids.register);
+        return z80e.Module["_hook_add_register_read"](this.pointer, register,hook_register.next_hook++, ids.register);
     }
 
     HookInfo.prototype.addRegisterWrite = function(register, hook_func) {
         hook_register.hooks[hook_register.next_hook] = hook_func;
-        return Module["_hook_add_register_write"](this.pointer, register, hook_register.next_hook++, ids.register);
+        return z80e.Module["_hook_add_register_write"](this.pointer, register, hook_register.next_hook++, ids.register);
     }
 
     HookInfo.prototype.addBeforeExecution = function(hook_func) {
         hook_exec.hooks[hook_exec.next_hook] = hook_func;
-        return Module["_hook_add_before_execution"](this.pointer, hook_exec.next_hook++, ids.exec);
+        return z80e.Module["_hook_add_before_execution"](this.pointer, hook_exec.next_hook++, ids.exec);
     }
 
     HookInfo.prototype.addAfterExecution = function(hook_func) {
         hook_exec.hooks[hook_exec.next_hook] = hook_func;
-        return Module["_hook_add_after_execution"](this.pointer, hook_exec.next_hook++, ids.exec);
+        return z80e.Module["_hook_add_after_execution"](this.pointer, hook_exec.next_hook++, ids.exec);
     }
 
     HookInfo.prototype.addLCDUpdate = function(hook_func) {
         hook_lcd.hooks[hook_lcd.next_hook] = hook_func;
-        return Module["_hook_add_lcd_update"](this.pointer, hook_lcd.next_hook++, ids.lcd);
+        return z80e.Module["_hook_add_lcd_update"](this.pointer, hook_lcd.next_hook++, ids.lcd);
     }
 
     return HookInfo;

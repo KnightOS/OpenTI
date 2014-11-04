@@ -1,4 +1,4 @@
-define(["require", "../../wrap", "../../TI/ASIC", "../../Debugger/HookInfo"], function(require, Wrap) {
+define(["require", "z80e",  "../../wrap", "../../TI/ASIC", "../../Debugger/HookInfo"], function(require, z80e, Wrap) {
     var LCD = function(pointer) {
         if (!pointer) {
             throw "This item can only be called with a pointer!";
@@ -28,7 +28,7 @@ define(["require", "../../wrap", "../../TI/ASIC", "../../Debugger/HookInfo"], fu
         pointer += 4;
         Object.defineProperty(this, "ram", {
             get: (function() {
-                return Module.HEAPU8.subarray(this.ram_pointer, this.ram_pointer + 64 * 120);
+                return z80e.Module.HEAPU8.subarray(this.ram_pointer, this.ram_pointer + 64 * 120);
             }).bind(this)
         });
 
@@ -40,15 +40,15 @@ define(["require", "../../wrap", "../../TI/ASIC", "../../Debugger/HookInfo"], fu
     }
 
     LCD.prototype.readScreen = function(Y, X) {
-        return Module["_bw_lcd_read_screen"](this.pointer, Y, X);
+        return z80e.Module["_bw_lcd_read_screen"](this.pointer, Y, X);
     }
 
     LCD.prototype.writeScreen = function(Y, X, val) {
-        return Module["_bw_lcd_write_screen"](this.pointer, Y, X, val);
+        return z80e.Module["_bw_lcd_write_screen"](this.pointer, Y, X, val);
     }
 
     LCD.prototype.reset = function() {
-        Module["_bw_lcd_reset"](this.pointer);
+        z80e.Module["_bw_lcd_reset"](this.pointer);
     }
 
     return LCD;

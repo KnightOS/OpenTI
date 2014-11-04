@@ -1,9 +1,9 @@
 define(
-  ["require", "../wrap", "../Runloop", "./MMU", "../Core/CPU",
+  ["require", "z80e", "../wrap", "../Runloop", "./MMU", "../Core/CPU",
    "../Debugger/HookInfo", "../Debugger/Debugger", "./Hardware/Hardware"],
-  function(require, Wrap, Runloop, MMU) {
+  function(require, z80e, Wrap, Runloop, MMU) {
     var ASIC = function(device) {
-        pointer = Module["_asic_init"](device);
+        pointer = z80e.Module["_asic_init"](device);
 
         this.pointer = pointer;
 
@@ -21,10 +21,10 @@ define(
 
         Object.defineProperty(this, "clock_rate", {
             get: (function() {
-                return HEAP32[(this.pointer + 16) / 4];
+                return z80e.Module.HEAP32[(this.pointer + 16) / 4];
             }).bind(this),
             set: (function(val) {
-                Module["_asic_set_clock_rate"](this.pointer, val);
+                z80e.Module["_asic_set_clock_rate"](this.pointer, val);
             }).bind(this)
         });
 
