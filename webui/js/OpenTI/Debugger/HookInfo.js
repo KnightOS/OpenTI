@@ -24,10 +24,10 @@ define(["z80e", "../TI/Hardware/T6A04"], function(z80e, T6A04) {
     hook_lcd.next_hook = 0;
 
     var ids = {
-        memory: Runtime.addFunction(hook_memory),
-        register: Runtime.addFunction(hook_register),
-        execute: Runtime.addFunction(hook_execute),
-        lcd: Runtime.addFunction(hook_lcd),
+        memory: Module.Runtime.addFunction(hook_memory),
+        register: Module.Runtime.addFunction(hook_register),
+        execute: Module.Runtime.addFunction(hook_execute),
+        lcd: Module.Runtime.addFunction(hook_lcd),
     };
 
     var HookInfo = function(pointer) {

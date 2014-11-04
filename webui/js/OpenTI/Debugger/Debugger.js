@@ -18,9 +18,9 @@ define(["z80e", "../wrap", "../TI/ASIC"], function(z80e, Wrap, ASIC) {
     }
 
     var ids = {
-        print_string: Runtime.addFunction(print_string),
-        window_closed: Runtime.addFunction(window_closed),
-        new_state: Runtime.addFunction(new_state)
+        print_string: Module.Runtime.addFunction(print_string),
+        window_closed: Module.Runtime.addFunction(window_closed),
+        new_state: Module.Runtime.addFunction(new_state)
     };
 
     var Debugger = function(pointer) {
@@ -123,10 +123,10 @@ define(["z80e", "../wrap", "../TI/ASIC"], function(z80e, Wrap, ASIC) {
     }
 
     Debugger.State.prototype.exec = function(command) {
-        var stack = Runtime.stackSave();
+        var stack = Module.Runtime.stackSave();
         var strpoint = allocate(intArrayFromString(command), 'i8', ALLOC_STACK);
         var ret = z80e.Module["_debugger_exec"](this.pointer, strpoint);
-        Runtime.stackRestore(stack);
+        Module.Runtime.stackRestore(stack);
         return ret;
     }
 
