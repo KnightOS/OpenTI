@@ -1,4 +1,4 @@
-define(function() {
+define(['z80e'], function(Module) {
     var Wrap = {};
     var ShouldWrap = {
         Int32: ["HEAP32", 4],
