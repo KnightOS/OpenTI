@@ -54,7 +54,7 @@ define(
     }
 
     ASIC.prototype.free = function() {
-        Module["_asic_free"](this.pointer);
+        z80e.Module["_asic_free"](this.pointer);
     }
 
     return ASIC;
